@@ -14,6 +14,7 @@ const TABS = {
     { key: "priceUsd", label: "Price", type: "number", format: "price" },
     { key: "marketCapUsd", label: "Market Cap", type: "number", format: "usd" },
     { key: "signal", label: "Signal", type: "string" },
+    { key: "term", label: "Term", type: "string" },
     { key: "signalScore", label: "Signal Score", type: "number" },
   ],
   Activity: [
@@ -110,48 +111,48 @@ function ProfSignalKey() {
       <div style={{ marginTop: "10px", lineHeight: "1.6" }}>
         <p style={{ marginBottom: "8px" }}>
           <strong>Prof</strong> = behavioral profile (wallets/txs/retention, price-independent).{" "}
-          <strong>Signal</strong> = does price agree with volume right now (a separate, price-aware layer).
-          Reading both together shows whether real usage and market reaction agree.
+          <strong>Signal</strong> = does price agree with volume right now (a separate, price-aware layer).{" "}
+          <strong>Term</strong> = a single word naming each of the 16 combinations, shorthand for the full read.
         </p>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Breakout</strong> (strong momentum + strong sustainability)
         </p>
         <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
-          <li><strong>Confirmed Growth</strong> — strongest combo on the board: real usage growing, price agrees.</li>
-          <li><strong>Absorbed</strong> — strong fundamentals, but volume isn't moving price yet. Possible accumulation or quiet selling pressure.</li>
-          <li><strong>Thin Rally</strong> — strong fundamentals, price up on light volume. Price may be ahead of activity.</li>
-          <li><strong>Cooling</strong> — strong fundamentals, market hasn't noticed yet. Possibly undiscovered.</li>
+          <li><strong>Confirmed Growth — Beacon</strong> — strongest combo on the board: real usage growing, price agrees.</li>
+          <li><strong>Absorbed — Undercurrent</strong> — strong fundamentals, but volume isn't moving price yet. Possible accumulation or quiet selling pressure.</li>
+          <li><strong>Thin Rally — Overshoot</strong> — strong fundamentals, price up on light volume. Price may be ahead of activity.</li>
+          <li><strong>Cooling — Quiet Beacon</strong> — strong fundamentals, market hasn't noticed yet. Possibly undiscovered.</li>
         </ul>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Quick Mover</strong> (strong momentum, weak sustainability)
         </p>
         <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
-          <li><strong>Confirmed Growth</strong> — hot right now, but durability unproven. Could fade.</li>
-          <li><strong>Absorbed</strong> — fast activity, price not rewarding it. Possible heavy selling into the move.</li>
-          <li><strong>Thin Rally</strong> — classic pump pattern: real activity, price popping on thin volume.</li>
-          <li><strong>Cooling</strong> — momentum likely fading along with price/volume.</li>
+          <li><strong>Confirmed Growth — Flare</strong> — hot right now, but durability unproven. Could fade.</li>
+          <li><strong>Absorbed — Backdraft</strong> — fast activity, price not rewarding it. Possible heavy selling into the move.</li>
+          <li><strong>Thin Rally — Flashpoint</strong> — classic pump pattern: real activity, price popping on thin volume.</li>
+          <li><strong>Cooling — Afterglow</strong> — momentum likely fading along with price/volume.</li>
         </ul>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Slow Burner</strong> (weak momentum, strong sustainability)
         </p>
         <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
-          <li><strong>Confirmed Growth</strong> — steady, sticky usage with price/volume finally agreeing.</li>
-          <li><strong>Absorbed</strong> — durable usage, possibly undervalued relative to its retention strength.</li>
-          <li><strong>Thin Rally</strong> — modest, low-risk price tick on a stable base.</li>
-          <li><strong>Cooling</strong> — stable but quiet. A "sleeper" — unexciting short-term.</li>
+          <li><strong>Confirmed Growth — Low Hum</strong> — steady, sticky usage with price/volume finally agreeing.</li>
+          <li><strong>Absorbed — Low Signal</strong> — durable usage, possibly undervalued relative to its retention strength.</li>
+          <li><strong>Thin Rally — Soft Ping</strong> — modest, low-risk price tick on a stable base.</li>
+          <li><strong>Cooling — Standby</strong> — stable but quiet. A "sleeper" — unexciting short-term.</li>
         </ul>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Cold</strong> (weak momentum + weak sustainability)
         </p>
         <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
-          <li><strong>Confirmed Growth</strong> — price/volume rising despite weak fundamentals. Disconnect — possibly hype-driven.</li>
-          <li><strong>Absorbed</strong> — weak fundamentals, rising volume, falling price. Possible distribution — worth caution.</li>
-          <li><strong>Thin Rally</strong> — weakest, highest-risk combo: price popping on thin volume with no fundamentals behind it.</li>
-          <li><strong>Cooling</strong> — weak across the board. Lowest priority.</li>
+          <li><strong>Confirmed Growth — Mirage</strong> — price/volume rising despite weak fundamentals. Disconnect — possibly hype-driven.</li>
+          <li><strong>Absorbed — Bleed</strong> — weak fundamentals, rising volume, falling price. Possible distribution — worth caution.</li>
+          <li><strong>Thin Rally — False Flare</strong> — weakest, highest-risk combo: price popping on thin volume with no fundamentals behind it.</li>
+          <li><strong>Cooling — Flatline</strong> — weak across the board. Lowest priority.</li>
         </ul>
       </div>
     </details>
@@ -172,9 +173,22 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const sourceData = isSpecialTab ? [] : Array.isArray(rawSource) ? rawSource : [];
   const rowKeyField = activeTab === "Discover" ? "address" : "Address";
 
-  const clawdRow = Array.isArray(data) ? data.find((d) => d["Project"] === "CLAWD") : null;
-  const clawdRank = clawdRow?.["O Rk"] ?? null;
-  const totalProjects = Array.isArray(data) ? data.length : null;
+  const dataArr = Array.isArray(data) ? data : [];
+  const clawdRow = dataArr.find((d) => d["Project"] === "CLAWD") || null;
+  const totalProjects = dataArr.length || null;
+  const opportunityRank = clawdRow?.["O Rk"] ?? null;
+  const momentumRank = clawdRow?.["M Rk"] ?? null;
+  const sustainabilityRank = clawdRow?.["S Rk"] ?? null;
+
+  function rankBy(field) {
+    const sorted = [...dataArr]
+      .filter((d) => d[field] != null)
+      .sort((a, b) => Number(b[field]) - Number(a[field]));
+    const idx = sorted.findIndex((d) => d["Project"] === "CLAWD");
+    return idx >= 0 ? idx + 1 : null;
+  }
+  const marketCapRank = rankBy("marketCapUsd");
+  const walletsRank = rankBy("Wallets 30d");
 
   function handleTabChange(tab) {
     setActiveTab(tab);
@@ -215,7 +229,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     <div>
       <StatusBanner lastUpdated={lastUpdated} />
 
-      {/* TAB BAR */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
         {Object.keys(TABS).map((tab) => (
           <button
@@ -291,7 +304,17 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
 
       {isTripwire && <TripwirePanel />}
       {isAbout && <AboutPanel />}
-      {isClawd && <ClawdPanel clawdRow={clawdRow} rank={clawdRank} totalProjects={totalProjects} />}
+      {isClawd && (
+        <ClawdPanel
+          clawdRow={clawdRow}
+          totalProjects={totalProjects}
+          opportunityRank={opportunityRank}
+          momentumRank={momentumRank}
+          sustainabilityRank={sustainabilityRank}
+          marketCapRank={marketCapRank}
+          walletsRank={walletsRank}
+        />
+      )}
 
       {!isSpecialTab && (
         <div style={{ overflowX: "auto" }}>
