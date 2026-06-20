@@ -73,6 +73,63 @@ function formatValue(val, format) {
   return val;
 }
 
+function ProfSignalKey() {
+  return (
+    <details style={{ marginBottom: "16px", fontSize: "14px", color: "#444" }}>
+      <summary style={{ cursor: "pointer", fontWeight: 600, color: "#333" }}>
+        Key: what do Prof + Signal combos mean?
+      </summary>
+      <div style={{ marginTop: "10px", lineHeight: "1.6" }}>
+        <p style={{ marginBottom: "8px" }}>
+          <strong>Prof</strong> = behavioral profile (wallets/txs/retention, price-independent).{" "}
+          <strong>Signal</strong> = does price agree with volume right now (a separate, price-aware layer).
+          Reading both together shows whether real usage and market reaction agree.
+        </p>
+
+        <p style={{ marginTop: "12px", marginBottom: "4px" }}>
+          <strong>Breakout</strong> (strong momentum + strong sustainability)
+        </p>
+        <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
+          <li><strong>Confirmed Growth</strong> — strongest combo on the board: real usage growing, price agrees.</li>
+          <li><strong>Absorbed</strong> — strong fundamentals, but volume isn't moving price yet. Possible accumulation or quiet selling pressure.</li>
+          <li><strong>Thin Rally</strong> — strong fundamentals, price up on light volume. Price may be ahead of activity.</li>
+          <li><strong>Cooling</strong> — strong fundamentals, market hasn't noticed yet. Possibly undiscovered.</li>
+        </ul>
+
+        <p style={{ marginTop: "12px", marginBottom: "4px" }}>
+          <strong>Quick Mover</strong> (strong momentum, weak sustainability)
+        </p>
+        <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
+          <li><strong>Confirmed Growth</strong> — hot right now, but durability unproven. Could fade.</li>
+          <li><strong>Absorbed</strong> — fast activity, price not rewarding it. Possible heavy selling into the move.</li>
+          <li><strong>Thin Rally</strong> — classic pump pattern: real activity, price popping on thin volume.</li>
+          <li><strong>Cooling</strong> — momentum likely fading along with price/volume.</li>
+        </ul>
+
+        <p style={{ marginTop: "12px", marginBottom: "4px" }}>
+          <strong>Slow Burner</strong> (weak momentum, strong sustainability)
+        </p>
+        <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
+          <li><strong>Confirmed Growth</strong> — steady, sticky usage with price/volume finally agreeing.</li>
+          <li><strong>Absorbed</strong> — durable usage, possibly undervalued relative to its retention strength.</li>
+          <li><strong>Thin Rally</strong> — modest, low-risk price tick on a stable base.</li>
+          <li><strong>Cooling</strong> — stable but quiet. A "sleeper" — unexciting short-term.</li>
+        </ul>
+
+        <p style={{ marginTop: "12px", marginBottom: "4px" }}>
+          <strong>Cold</strong> (weak momentum + weak sustainability)
+        </p>
+        <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
+          <li><strong>Confirmed Growth</strong> — price/volume rising despite weak fundamentals. Disconnect — possibly hype-driven.</li>
+          <li><strong>Absorbed</strong> — weak fundamentals, rising volume, falling price. Possible distribution — worth caution.</li>
+          <li><strong>Thin Rally</strong> — weakest, highest-risk combo: price popping on thin volume with no fundamentals behind it.</li>
+          <li><strong>Cooling</strong> — weak across the board. Lowest priority.</li>
+        </ul>
+      </div>
+    </details>
+  );
+}
+
 export default function DashboardTable({ data, discoveryData = [] }) {
   const [activeTab, setActiveTab] = useState("Overview");
   const [sortKey, setSortKey] = useState("Opp");
@@ -164,6 +221,8 @@ export default function DashboardTable({ data, discoveryData = [] }) {
           CoinGecko isn't perfect either.
         </p>
       )}
+
+      {activeTab === "Overview" && <ProfSignalKey />}
 
       {isTripwire ? (
         <TripwirePanel />
