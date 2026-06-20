@@ -1,3 +1,5 @@
+import { fetchCoinGeckoJSON } from "../../../lib/coingeckoFetch";
+
 const CLAWD_HISTORY_QUERY_ID = "7767406";
 const CLAWD_ADDRESS = "0x9f86db9fc6f7c9408e8fda3ff8ce4e78ac7a6b07";
 
@@ -15,26 +17,20 @@ async function fetchBehavioralHistory() {
 }
 
 async function fetchPriceHistory() {
-  try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/base/contract/${CLAWD_ADDRESS}/market_chart?vs_currency=usd&days=60`,
-      {
-        headers: { "x-cg-demo-api-key": process.env.COINGECKO_API_KEY },
-        cache: "no-store",
-      }
-    );
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      return { prices: [], market_caps: [], error: `CoinGecko ${res.status}: ${text.slice(0, 200)}` };
-    }
-    const json = await res.json();
+  const result = await fetchCoinGeckoJSON(
+    `https://api.coingecko.com/api/v3/coins/base/contract/${CLAWD_ADDRESS}/market_chart?vs_currency=usd&days=60`
+  );
+  if (!result.ok) {
     return {
-      prices: json.prices || [],
-      market_caps: json.market_caps || [],
+      prices: [],
+      market_caps: [],
+      error: `CoinGecko ${result.status}${result.error ? ": " + result.error : ""}`,
     };
-  } catch (err) {
-    return { prices: [], market_caps: [], error: String(err) };
   }
+  return {
+    prices: result.data.prices || [],
+    market_caps: result.data.market_caps || [],
+  };
 }
 
 export async function GET() {
