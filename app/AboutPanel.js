@@ -137,10 +137,13 @@ export default function AboutPanel() {
           src="/clawd-pfp.png"
           alt="CLAWD mascot"
           style={{
-            width: "1440px",
+            width: "1152px",
             maxWidth: "100%",
-            height: "auto",
+            aspectRatio: "1 / 1",
+            objectFit: "cover",
+            borderRadius: "50%",
           }}
+        />
         />
       </div>
     </div>
