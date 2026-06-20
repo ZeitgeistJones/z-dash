@@ -7,6 +7,7 @@ import ClawdPanel from "./ClawdPanel";
 const TABS = {
   Overview: [
     { key: "Project", label: "Project", type: "string" },
+    { key: "read", label: "Read", type: "string" },
     { key: "Opp", label: "Opp", type: "number" },
     { key: "Mom", label: "Mom", type: "number" },
     { key: "Sus", label: "Sus", type: "number" },
@@ -14,7 +15,6 @@ const TABS = {
     { key: "priceUsd", label: "Price", type: "number", format: "price" },
     { key: "marketCapUsd", label: "Market Cap", type: "number", format: "usd" },
     { key: "signal", label: "Signal", type: "string" },
-    { key: "term", label: "Term", type: "string" },
     { key: "signalScore", label: "Signal Score", type: "number" },
   ],
   Activity: [
@@ -65,6 +65,53 @@ const TABS = {
   ],
 };
 
+const READ_TIERS = {
+  Beacon: "teal",
+  "Low Hum": "teal",
+  Undercurrent: "teal",
+  "Quiet Beacon": "teal",
+  Flare: "amber",
+  "Low Signal": "amber",
+  "Soft Ping": "amber",
+  Afterglow: "amber",
+  Standby: "amber",
+  Mirage: "amber",
+  Backdraft: "coral",
+  Flashpoint: "coral",
+  Overshoot: "coral",
+  Bleed: "coral",
+  "False Flare": "coral",
+  Flatline: "coral",
+};
+
+const READ_TIER_COLORS = {
+  teal: { bg: "#E1F5EE", text: "#085041" },
+  amber: { bg: "#FAEEDA", text: "#633806" },
+  coral: { bg: "#FAECE7", text: "#712B13" },
+};
+
+function ReadBadge({ value }) {
+  if (!value) return "—";
+  const tier = READ_TIERS[value] || "amber";
+  const colors = READ_TIER_COLORS[tier];
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        fontSize: "12px",
+        fontWeight: 600,
+        padding: "2px 8px",
+        borderRadius: "6px",
+        background: colors.bg,
+        color: colors.text,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {value}
+    </span>
+  );
+}
+
 function formatValue(val, format) {
   if (val == null || val === "") return "—";
   if (format === "price") return `$${Number(val).toPrecision(4)}`;
@@ -106,53 +153,54 @@ function ProfSignalKey() {
   return (
     <details style={{ marginBottom: "16px", fontSize: "14px", color: "#444" }}>
       <summary style={{ cursor: "pointer", fontWeight: 600, color: "#333" }}>
-        Key: what do Prof + Signal combos mean?
+        Key: what do Prof + Signal + Read mean?
       </summary>
       <div style={{ marginTop: "10px", lineHeight: "1.6" }}>
         <p style={{ marginBottom: "8px" }}>
           <strong>Prof</strong> = behavioral profile (wallets/txs/retention, price-independent).{" "}
           <strong>Signal</strong> = does price agree with volume right now (a separate, price-aware layer).{" "}
-          <strong>Term</strong> = a single word naming each of the 16 combinations, shorthand for the full read.
+          <strong>Read</strong> = the named verdict for that specific Prof + Signal combination — the
+          shorthand for "what does this actually mean."
         </p>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Breakout</strong> (strong momentum + strong sustainability)
         </p>
-        <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
-          <li><strong>Confirmed Growth — Beacon</strong> — strongest combo on the board: real usage growing, price agrees.</li>
-          <li><strong>Absorbed — Undercurrent</strong> — strong fundamentals, but volume isn't moving price yet. Possible accumulation or quiet selling pressure.</li>
-          <li><strong>Thin Rally — Overshoot</strong> — strong fundamentals, price up on light volume. Price may be ahead of activity.</li>
-          <li><strong>Cooling — Quiet Beacon</strong> — strong fundamentals, market hasn't noticed yet. Possibly undiscovered.</li>
+        <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
+          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Beacon" /> — strongest combo on the board: real usage growing, price agrees.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Undercurrent" /> — strong fundamentals, but volume isn't moving price yet. Possible accumulation or quiet selling pressure.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="Overshoot" /> — strong fundamentals, price up on light volume. Price may be ahead of activity.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Quiet Beacon" /> — strong fundamentals, market hasn't noticed yet. Possibly undiscovered.</li>
         </ul>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Quick Mover</strong> (strong momentum, weak sustainability)
         </p>
-        <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
-          <li><strong>Confirmed Growth — Flare</strong> — hot right now, but durability unproven. Could fade.</li>
-          <li><strong>Absorbed — Backdraft</strong> — fast activity, price not rewarding it. Possible heavy selling into the move.</li>
-          <li><strong>Thin Rally — Flashpoint</strong> — classic pump pattern: real activity, price popping on thin volume.</li>
-          <li><strong>Cooling — Afterglow</strong> — momentum likely fading along with price/volume.</li>
+        <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
+          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Flare" /> — hot right now, but durability unproven. Could fade.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Backdraft" /> — fast activity, price not rewarding it. Possible heavy selling into the move.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="Flashpoint" /> — classic pump pattern: real activity, price popping on thin volume.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Afterglow" /> — momentum likely fading along with price/volume.</li>
         </ul>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Slow Burner</strong> (weak momentum, strong sustainability)
         </p>
-        <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
-          <li><strong>Confirmed Growth — Low Hum</strong> — steady, sticky usage with price/volume finally agreeing.</li>
-          <li><strong>Absorbed — Low Signal</strong> — durable usage, possibly undervalued relative to its retention strength.</li>
-          <li><strong>Thin Rally — Soft Ping</strong> — modest, low-risk price tick on a stable base.</li>
-          <li><strong>Cooling — Standby</strong> — stable but quiet. A "sleeper" — unexciting short-term.</li>
+        <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
+          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Low Hum" /> — steady, sticky usage with price/volume finally agreeing.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Low Signal" /> — durable usage, possibly undervalued relative to its retention strength.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="Soft Ping" /> — modest, low-risk price tick on a stable base.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Standby" /> — stable but quiet. A "sleeper" — unexciting short-term.</li>
         </ul>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Cold</strong> (weak momentum + weak sustainability)
         </p>
-        <ul style={{ marginTop: 0, paddingLeft: "20px" }}>
-          <li><strong>Confirmed Growth — Mirage</strong> — price/volume rising despite weak fundamentals. Disconnect — possibly hype-driven.</li>
-          <li><strong>Absorbed — Bleed</strong> — weak fundamentals, rising volume, falling price. Possible distribution — worth caution.</li>
-          <li><strong>Thin Rally — False Flare</strong> — weakest, highest-risk combo: price popping on thin volume with no fundamentals behind it.</li>
-          <li><strong>Cooling — Flatline</strong> — weak across the board. Lowest priority.</li>
+        <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
+          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Mirage" /> — price/volume rising despite weak fundamentals. Disconnect — possibly hype-driven.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Bleed" /> — weak fundamentals, rising volume, falling price. Possible distribution — worth caution.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="False Flare" /> — weakest, highest-risk combo: price popping on thin volume with no fundamentals behind it.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Flatline" /> — weak across the board. Lowest priority.</li>
         </ul>
       </div>
     </details>
@@ -352,7 +400,13 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
                   <tr key={d[rowKeyField]}>
                     {columns.map((col) => (
                       <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
-                        {col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
+                        {col.key === "read" ? (
+                          <ReadBadge value={d[col.key]} />
+                        ) : col.format ? (
+                          formatValue(d[col.key], col.format)
+                        ) : (
+                          d[col.key] ?? "—"
+                        )}
                       </td>
                     ))}
                   </tr>
