@@ -53,6 +53,13 @@ const TABS = {
     { key: "Risk %", label: "Risk %", type: "number" },
     { key: "Qlty %", label: "Qlty %", type: "number" },
   ],
+  Discover: [
+    { key: "name", label: "Project", type: "string" },
+    { key: "symbol", label: "Symbol", type: "string" },
+    { key: "marketCapUsd", label: "Market Cap", type: "number", format: "usd" },
+    { key: "priceUsd", label: "Price", type: "number", format: "price" },
+    { key: "address", label: "Address", type: "string" },
+  ],
 };
 
 function formatValue(val, format) {
@@ -62,16 +69,18 @@ function formatValue(val, format) {
   return val;
 }
 
-export default function DashboardTable({ data }) {
+export default function DashboardTable({ data, discoveryData = [] }) {
   const [activeTab, setActiveTab] = useState("Overview");
   const [sortKey, setSortKey] = useState("Opp");
   const [sortDir, setSortDir] = useState("desc");
 
   const columns = TABS[activeTab];
+  const rawSource = activeTab === "Discover" ? discoveryData : data;
+  const sourceData = Array.isArray(rawSource) ? rawSource : [];
+  const rowKeyField = activeTab === "Discover" ? "address" : "Address";
 
   function handleTabChange(tab) {
     setActiveTab(tab);
-    // default-sort each tab by its first numeric column
     const firstNumeric = TABS[tab].find((c) => c.type === "number");
     setSortKey(firstNumeric ? firstNumeric.key : TABS[tab][0].key);
     setSortDir("desc");
@@ -86,7 +95,7 @@ export default function DashboardTable({ data }) {
     }
   }
 
-  const sorted = [...data].sort((a, b) => {
+  const sorted = [...sourceData].sort((a, b) => {
     const col = columns.find((c) => c.key === sortKey) || columns[0];
     let aVal = a[sortKey];
     let bVal = b[sortKey];
@@ -121,9 +130,18 @@ export default function DashboardTable({ data }) {
             }}
           >
             {tab}
+            {tab === "Discover" && discoveryData.length > 0 ? ` (${discoveryData.length})` : ""}
           </button>
         ))}
       </div>
+
+      {activeTab === "Discover" && (
+        <p style={{ color: "#666", marginBottom: "12px", fontSize: "14px" }}>
+          AI-category coins from CoinGecko (AI Agents, AI Agent Launchpad, AI Framework, DeFAI) with a Base
+          contract address, not yet in your tracked list. Verify each before adding — category tagging on
+          CoinGecko isn't perfect either.
+        </p>
+      )}
 
       {/* TABLE */}
       <div style={{ overflowX: "auto" }}>
@@ -150,15 +168,23 @@ export default function DashboardTable({ data }) {
             </tr>
           </thead>
           <tbody>
-            {sorted.map((d) => (
-              <tr key={d["Address"]}>
-                {columns.map((col) => (
-                  <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
-                    {col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
-                  </td>
-                ))}
+            {sorted.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} style={{ padding: "16px", color: "#666" }}>
+                  {activeTab === "Discover" ? "No new candidates found." : "No data."}
+                </td>
               </tr>
-            ))}
+            ) : (
+              sorted.map((d) => (
+                <tr key={d[rowKeyField]}>
+                  {columns.map((col) => (
+                    <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
+                      {col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
