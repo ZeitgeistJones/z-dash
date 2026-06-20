@@ -144,7 +144,6 @@ export default function AboutPanel() {
             borderRadius: "50%",
           }}
         />
-        />
       </div>
     </div>
   );
