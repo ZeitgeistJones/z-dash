@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import TripwirePanel from "./TripwirePanel";
 
 // ============================================================
 // COLUMN GROUPS — each tab shows a different slice of the same
@@ -19,6 +20,7 @@ const TABS = {
   ],
   Activity: [
     { key: "Project", label: "Project", type: "string" },
+    { key: "marketCapUsd", label: "Market Cap", type: "number", format: "usd" },
     { key: "Vol 30d", label: "Vol 30d", type: "number", format: "usd" },
     { key: "Vol/Tx", label: "Vol/Tx", type: "number" },
     { key: "Vol/Wlt", label: "Vol/Wlt", type: "number" },
@@ -30,6 +32,7 @@ const TABS = {
   ],
   Wallets: [
     { key: "Project", label: "Project", type: "string" },
+    { key: "marketCapUsd", label: "Market Cap", type: "number", format: "usd" },
     { key: "Wallets 30d", label: "Wallets 30d", type: "number" },
     { key: "Wallets 7d", label: "Wallets 7d", type: "number" },
     { key: "User Grw %", label: "User Grw %", type: "number" },
@@ -41,6 +44,7 @@ const TABS = {
   ],
   "Buyers & Risk": [
     { key: "Project", label: "Project", type: "string" },
+    { key: "marketCapUsd", label: "Market Cap", type: "number", format: "usd" },
     { key: "Traders", label: "Traders", type: "number" },
     { key: "Buyers 30d", label: "Buyers 30d", type: "number" },
     { key: "Buyers 7d", label: "Buyers 7d", type: "number" },
@@ -74,13 +78,15 @@ export default function DashboardTable({ data, discoveryData = [] }) {
   const [sortKey, setSortKey] = useState("Opp");
   const [sortDir, setSortDir] = useState("desc");
 
-  const columns = TABS[activeTab];
+  const isTripwire = activeTab === "Tripwire";
+  const columns = isTripwire ? [] : TABS[activeTab];
   const rawSource = activeTab === "Discover" ? discoveryData : data;
-  const sourceData = Array.isArray(rawSource) ? rawSource : [];
+  const sourceData = isTripwire ? [] : Array.isArray(rawSource) ? rawSource : [];
   const rowKeyField = activeTab === "Discover" ? "address" : "Address";
 
   function handleTabChange(tab) {
     setActiveTab(tab);
+    if (tab === "Tripwire") return;
     const firstNumeric = TABS[tab].find((c) => c.type === "number");
     setSortKey(firstNumeric ? firstNumeric.key : TABS[tab][0].key);
     setSortDir("desc");
@@ -95,21 +101,23 @@ export default function DashboardTable({ data, discoveryData = [] }) {
     }
   }
 
-  const sorted = [...sourceData].sort((a, b) => {
-    const col = columns.find((c) => c.key === sortKey) || columns[0];
-    let aVal = a[sortKey];
-    let bVal = b[sortKey];
+  const sorted = isTripwire
+    ? []
+    : [...sourceData].sort((a, b) => {
+        const col = columns.find((c) => c.key === sortKey) || columns[0];
+        let aVal = a[sortKey];
+        let bVal = b[sortKey];
 
-    if (col.type === "number") {
-      aVal = aVal == null || aVal === "" ? -Infinity : Number(aVal);
-      bVal = bVal == null || bVal === "" ? -Infinity : Number(bVal);
-      return sortDir === "desc" ? bVal - aVal : aVal - bVal;
-    } else {
-      aVal = aVal == null ? "" : String(aVal);
-      bVal = bVal == null ? "" : String(bVal);
-      return sortDir === "desc" ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
-    }
-  });
+        if (col.type === "number") {
+          aVal = aVal == null || aVal === "" ? -Infinity : Number(aVal);
+          bVal = bVal == null || bVal === "" ? -Infinity : Number(bVal);
+          return sortDir === "desc" ? bVal - aVal : aVal - bVal;
+        } else {
+          aVal = aVal == null ? "" : String(aVal);
+          bVal = bVal == null ? "" : String(bVal);
+          return sortDir === "desc" ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+        }
+      });
 
   return (
     <div>
@@ -133,6 +141,20 @@ export default function DashboardTable({ data, discoveryData = [] }) {
             {tab === "Discover" && discoveryData.length > 0 ? ` (${discoveryData.length})` : ""}
           </button>
         ))}
+        <button
+          onClick={() => handleTabChange("Tripwire")}
+          style={{
+            padding: "8px 16px",
+            borderRadius: "6px",
+            border: activeTab === "Tripwire" ? "1px solid #333" : "1px solid #ccc",
+            background: activeTab === "Tripwire" ? "#333" : "#fff",
+            color: activeTab === "Tripwire" ? "#fff" : "#333",
+            cursor: "pointer",
+            fontWeight: activeTab === "Tripwire" ? 600 : 400,
+          }}
+        >
+          Tripwire
+        </button>
       </div>
 
       {activeTab === "Discover" && (
@@ -143,51 +165,54 @@ export default function DashboardTable({ data, discoveryData = [] }) {
         </p>
       )}
 
-      {/* TABLE */}
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
-          <thead>
-            <tr>
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  onClick={() => handleSort(col.key)}
-                  style={{
-                    textAlign: "left",
-                    borderBottom: "1px solid #ccc",
-                    padding: "6px 12px",
-                    cursor: "pointer",
-                    userSelect: "none",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {col.label}
-                  {sortKey === col.key ? (sortDir === "desc" ? " ▼" : " ▲") : ""}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.length === 0 ? (
+      {isTripwire ? (
+        <TripwirePanel />
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
+            <thead>
               <tr>
-                <td colSpan={columns.length} style={{ padding: "16px", color: "#666" }}>
-                  {activeTab === "Discover" ? "No new candidates found." : "No data."}
-                </td>
+                {columns.map((col) => (
+                  <th
+                    key={col.key}
+                    onClick={() => handleSort(col.key)}
+                    style={{
+                      textAlign: "left",
+                      borderBottom: "1px solid #ccc",
+                      padding: "6px 12px",
+                      cursor: "pointer",
+                      userSelect: "none",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {col.label}
+                    {sortKey === col.key ? (sortDir === "desc" ? " ▼" : " ▲") : ""}
+                  </th>
+                ))}
               </tr>
-            ) : (
-              sorted.map((d) => (
-                <tr key={d[rowKeyField]}>
-                  {columns.map((col) => (
-                    <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
-                      {col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
-                    </td>
-                  ))}
+            </thead>
+            <tbody>
+              {sorted.length === 0 ? (
+                <tr>
+                  <td colSpan={columns.length} style={{ padding: "16px", color: "#666" }}>
+                    {activeTab === "Discover" ? "No new candidates found." : "No data."}
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                sorted.map((d) => (
+                  <tr key={d[rowKeyField]}>
+                    {columns.map((col) => (
+                      <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
+                        {col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
