@@ -17,20 +17,23 @@ async function fetchBehavioralHistory() {
 async function fetchPriceHistory() {
   try {
     const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/base/contract/${CLAWD_ADDRESS}/market_chart/?vs_currency=usd&days=60`,
+      `https://api.coingecko.com/api/v3/coins/base/contract/${CLAWD_ADDRESS}/market_chart?vs_currency=usd&days=60`,
       {
         headers: { "x-cg-demo-api-key": process.env.COINGECKO_API_KEY },
         cache: "no-store",
       }
     );
-    if (!res.ok) return { prices: [], market_caps: [] };
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      return { prices: [], market_caps: [], error: `CoinGecko ${res.status}: ${text.slice(0, 200)}` };
+    }
     const json = await res.json();
     return {
       prices: json.prices || [],
       market_caps: json.market_caps || [],
     };
-  } catch {
-    return { prices: [], market_caps: [] };
+  } catch (err) {
+    return { prices: [], market_caps: [], error: String(err) };
   }
 }
 
