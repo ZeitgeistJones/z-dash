@@ -70,6 +70,36 @@ function formatValue(val, format) {
   return val;
 }
 
+function StatusBanner({ lastUpdated }) {
+  const formatted = lastUpdated
+    ? new Date(lastUpdated).toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : "unknown";
+
+  return (
+    <div
+      style={{
+        background: "#f7f7f5",
+        border: "1px solid #e0e0e0",
+        borderRadius: "8px",
+        padding: "12px 16px",
+        marginBottom: "16px",
+        fontSize: "13px",
+        color: "#555",
+        lineHeight: "1.5",
+      }}
+    >
+      <strong>v1 — running on free-tier infrastructure.</strong> Behavioral scores (Opp/Mom/Sus and the
+      Activity/Wallets/Buyers &amp; Risk tabs) are refreshed manually, not live —{" "}
+      <strong>scores last updated: {formatted}</strong>. Price and Market Cap refresh automatically about
+      once an hour. Tripwire triggers a real, fresh on-chain query every time it's clicked, so usage may be
+      limited to stay within free-tier query credits.
+    </div>
+  );
+}
+
 function ProfSignalKey() {
   return (
     <details style={{ marginBottom: "16px", fontSize: "14px", color: "#444" }}>
@@ -127,7 +157,7 @@ function ProfSignalKey() {
   );
 }
 
-export default function DashboardTable({ data, discoveryData = [] }) {
+export default function DashboardTable({ data, discoveryData = [], lastUpdated }) {
   const [activeTab, setActiveTab] = useState("Overview");
   const [sortKey, setSortKey] = useState("Opp");
   const [sortDir, setSortDir] = useState("desc");
@@ -177,6 +207,8 @@ export default function DashboardTable({ data, discoveryData = [] }) {
 
   return (
     <div>
+      <StatusBanner lastUpdated={lastUpdated} />
+
       {/* TAB BAR */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
         {Object.keys(TABS).map((tab) => (
