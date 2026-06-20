@@ -158,6 +158,11 @@ export default function ClawdPanel({ clawdRow, rank, totalProjects }) {
           <SimpleLineChart data={susSeries} color="#a55a3a" />
 
           <h3 style={{ marginTop: "24px" }}>Market Trend — last ~60 days</h3>
+          {priceHistory.error && (
+            <p style={{ fontSize: "12px", color: "#c0392b", marginBottom: "8px" }}>
+              Price/market cap history failed to load: {priceHistory.error}
+            </p>
+          )}
           <p style={{ fontSize: "13px", color: "#666", marginBottom: "8px" }}>Market Cap (USD)</p>
           <SimpleLineChart data={marketCapSeries} color="#8a4f8a" formatY={formatUsd} />
           <p style={{ fontSize: "13px", color: "#666", margin: "16px 0 8px" }}>Price (USD)</p>
