@@ -24,16 +24,24 @@ function SimpleLineChart({ data, height = 120, color = "#4f8a5b", formatY }) {
   const last = points[points.length - 1];
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", height: `${height}px` }}>
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      style={{ width: "100%", height: `${height}px`, display: "block" }}
+    >
       <path d={pathD} fill="none" stroke={color} strokeWidth="2" />
       {points.map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} />
       ))}
-      {points.map((p, i) => (
-        <text key={`label-${i}`} x={p.x} y={height - 6} fontSize="9" textAnchor="middle" fill="#888">
-          {p.label}
-        </text>
-      ))}
+      {points.map((p, i) => {
+        const labelEvery = Math.max(1, Math.ceil(points.length / 6));
+        if (i % labelEvery !== 0 && i !== points.length - 1) return null;
+        return (
+          <text key={`label-${i}`} x={p.x} y={height - 6} fontSize="9" textAnchor="middle" fill="#888">
+            {p.label}
+          </text>
+        );
+      })}
       <text x={last.x} y={last.y - 10} fontSize="10" textAnchor="middle" fill={color} fontWeight="600">
         {formatY ? formatY(last.value) : last.value}
       </text>
@@ -166,7 +174,11 @@ export default function ClawdPanel({ clawdRow, rank, totalProjects }) {
           <p style={{ fontSize: "13px", color: "#666", marginBottom: "8px" }}>Market Cap (USD)</p>
           <SimpleLineChart data={marketCapSeries} color="#8a4f8a" formatY={formatUsd} />
           <p style={{ fontSize: "13px", color: "#666", margin: "16px 0 8px" }}>Price (USD)</p>
-          <SimpleLineChart data={priceSeries} color="#4f8a8a" />
+          <SimpleLineChart
+            data={priceSeries}
+            color="#4f8a8a"
+            formatY={(v) => `$${Number(v).toPrecision(4)}`}
+          />
         </>
       )}
 
