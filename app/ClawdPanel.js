@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 
-function SimpleLineChart({ data, height = 120, color = "#4f8a5b", formatY }) {
+function SimpleLineChart({ data, height = 100, color = "#4f8a5b", formatY }) {
   if (!data || data.length === 0) {
     return <p style={{ color: "#888", fontSize: "13px" }}>No data yet.</p>;
   }
   const width = 600;
-  const padding = 30;
+  const padding = 12;
   const values = data.map((d) => d.y).filter((v) => v != null && !Number.isNaN(v));
   if (values.length === 0) return <p style={{ color: "#888", fontSize: "13px" }}>No data yet.</p>;
 
@@ -23,29 +23,39 @@ function SimpleLineChart({ data, height = 120, color = "#4f8a5b", formatY }) {
   const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
   const last = points[points.length - 1];
 
+  const labelCount = Math.min(6, points.length);
+  const labelStep = Math.max(1, Math.floor((points.length - 1) / (labelCount - 1 || 1)));
+  const labelIndices = [];
+  for (let i = 0; i < points.length; i += labelStep) labelIndices.push(i);
+  if (labelIndices[labelIndices.length - 1] !== points.length - 1) {
+    labelIndices.push(points.length - 1);
+  }
+
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio="none"
-      style={{ width: "100%", height: `${height}px`, display: "block" }}
-    >
-      <path d={pathD} fill="none" stroke={color} strokeWidth="2" />
-      {points.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} />
-      ))}
-      {points.map((p, i) => {
-        const labelEvery = Math.max(1, Math.ceil(points.length / 6));
-        if (i % labelEvery !== 0 && i !== points.length - 1) return null;
-        return (
-          <text key={`label-${i}`} x={p.x} y={height - 6} fontSize="9" textAnchor="middle" fill="#888">
-            {p.label}
-          </text>
-        );
-      })}
-      <text x={last.x} y={last.y - 10} fontSize="10" textAnchor="middle" fill={color} fontWeight="600">
-        {formatY ? formatY(last.value) : last.value}
-      </text>
-    </svg>
+    <div>
+      <div style={{ textAlign: "right", marginBottom: "2px" }}>
+        <span style={{ fontSize: "13px", fontWeight: 600, color }}>
+          {formatY ? formatY(last.value) : last.value}
+        </span>
+      </div>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        style={{ width: "100%", height: `${height}px`, display: "block" }}
+      >
+        <path d={pathD} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} />
+        ))}
+      </svg>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
+        {labelIndices.map((i) => (
+          <span key={i} style={{ fontSize: "11px", color: "#888" }}>
+            {points[i].label}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
