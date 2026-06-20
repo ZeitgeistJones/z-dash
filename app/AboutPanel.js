@@ -132,18 +132,17 @@ export default function AboutPanel() {
         </p>
       </div>
 
-      <img
-        src="/clawd-pfp.png"
-        alt="CLAWD mascot"
-        style={{
-          width: "360px",
-          maxWidth: "100%",
-          height: "auto",
-          borderRadius: "8px",
-          border: "1px solid #e0e0e0",
-          flexShrink: 0,
-        }}
-      />
+      <div style={{ flex: "1 1 300px", display: "flex", justifyContent: "center", paddingTop: "8px" }}>
+        <img
+          src="/clawd-pfp.png"
+          alt="CLAWD mascot"
+          style={{
+            width: "1440px",
+            maxWidth: "100%",
+            height: "auto",
+          }}
+        />
+      </div>
     </div>
   );
 }
