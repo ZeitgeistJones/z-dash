@@ -79,18 +79,7 @@ function StatusBanner({ lastUpdated }) {
     : "unknown";
 
   return (
-    <div
-      style={{
-        background: "#f7f7f5",
-        border: "1px solid #e0e0e0",
-        borderRadius: "8px",
-        padding: "12px 16px",
-        marginBottom: "16px",
-        fontSize: "13px",
-        color: "#555",
-        lineHeight: "1.5",
-      }}
-    >
+    <div className="banner">
       <strong>v1 — running on free-tier infrastructure.</strong> Behavioral scores (Opp/Mom/Sus and the
       Activity/Wallets/Buyers &amp; Risk tabs) are refreshed manually, not live —{" "}
       <strong>scores last updated: {formatted}</strong>. Price and Market Cap refresh automatically about
@@ -102,11 +91,11 @@ function StatusBanner({ lastUpdated }) {
 
 function ProfSignalKey() {
   return (
-    <details style={{ marginBottom: "16px", fontSize: "14px", color: "#444" }}>
-      <summary style={{ cursor: "pointer", fontWeight: 600, color: "#333" }}>
+    <details className="key">
+      <summary>
         Key: what do Prof + Signal combos mean?
       </summary>
-      <div style={{ marginTop: "10px", lineHeight: "1.6" }}>
+      <div className="key-body">
         <p style={{ marginBottom: "8px" }}>
           <strong>Prof</strong> = behavioral profile (wallets/txs/retention, price-independent).{" "}
           <strong>Signal</strong> = does price agree with volume right now (a separate, price-aware layer).
@@ -154,6 +143,46 @@ function ProfSignalKey() {
         </ul>
       </div>
     </details>
+  );
+}
+
+function StatCards({ data, discoveryData }) {
+  const rows = Array.isArray(data) ? data : [];
+  const total = rows.length;
+
+  const breakouts = rows.filter((d) => d["Prof"] === "Breakout").length;
+
+  const oppVals = rows
+    .map((d) => Number(d["Opp"]))
+    .filter((n) => Number.isFinite(n));
+  const avgOpp = oppVals.length
+    ? (oppVals.reduce((a, b) => a + b, 0) / oppVals.length).toFixed(1)
+    : "—";
+
+  const confirmed = rows.filter((d) => d["signal"] === "Confirmed Growth").length;
+
+  const cards = [
+    { label: "Projects Tracked", value: total, sub: "cohort size" },
+    { label: "Breakouts", value: breakouts, sub: "above median on both", accent: true },
+    { label: "Avg Opportunity", value: avgOpp, sub: "behavioral score" },
+    {
+      label: "Discover Candidates",
+      value: Array.isArray(discoveryData) ? discoveryData.length : 0,
+      sub: "not yet tracked",
+    },
+    { label: "Confirmed Growth", value: confirmed, sub: "vol up · price up" },
+  ];
+
+  return (
+    <div className="stat-grid">
+      {cards.slice(0, 4).map((c) => (
+        <div key={c.label} className="stat-card">
+          <span className="stat-label">{c.label}</span>
+          <span className={`stat-value num ${c.accent ? "stat-accent" : ""}`}>{c.value}</span>
+          <span className="stat-sub">{c.sub}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -209,58 +238,40 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     <div>
       <StatusBanner lastUpdated={lastUpdated} />
 
+      <StatCards data={data} discoveryData={discoveryData} />
+
       {/* TAB BAR */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
+      <div className="tabs">
         {Object.keys(TABS).map((tab) => (
           <button
             key={tab}
             onClick={() => handleTabChange(tab)}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              border: activeTab === tab ? "1px solid #333" : "1px solid #ccc",
-              background: activeTab === tab ? "#333" : "#fff",
-              color: activeTab === tab ? "#fff" : "#333",
-              cursor: "pointer",
-              fontWeight: activeTab === tab ? 600 : 400,
-            }}
+            className={`tab ${activeTab === tab ? "active" : ""}`}
           >
             {tab}
-            {tab === "Discover" && discoveryData.length > 0 ? ` (${discoveryData.length})` : ""}
+            {tab === "Discover" && discoveryData.length > 0 ? (
+              <span className="tab-count"> ({discoveryData.length})</span>
+            ) : (
+              ""
+            )}
           </button>
         ))}
         <button
           onClick={() => handleTabChange("Tripwire")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "6px",
-            border: activeTab === "Tripwire" ? "1px solid #333" : "1px solid #ccc",
-            background: activeTab === "Tripwire" ? "#333" : "#fff",
-            color: activeTab === "Tripwire" ? "#fff" : "#333",
-            cursor: "pointer",
-            fontWeight: activeTab === "Tripwire" ? 600 : 400,
-          }}
+          className={`tab ${activeTab === "Tripwire" ? "active" : ""}`}
         >
           Tripwire
         </button>
         <button
           onClick={() => handleTabChange("About")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "6px",
-            border: activeTab === "About" ? "1px solid #333" : "1px solid #ccc",
-            background: activeTab === "About" ? "#333" : "#fff",
-            color: activeTab === "About" ? "#fff" : "#333",
-            cursor: "pointer",
-            fontWeight: activeTab === "About" ? 600 : 400,
-          }}
+          className={`tab ${activeTab === "About" ? "active" : ""}`}
         >
           About
         </button>
       </div>
 
       {activeTab === "Discover" && (
-        <p style={{ color: "#666", marginBottom: "12px", fontSize: "14px" }}>
+        <p className="note">
           AI-category coins from CoinGecko (AI Agents, AI Agent Launchpad, AI Framework, DeFAI) with a Base
           contract address, not yet in your tracked list. Verify each before adding — category tagging on
           CoinGecko isn't perfect either.
@@ -273,25 +284,22 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       {isAbout && <AboutPanel />}
 
       {!isSpecialTab && (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
+        <div className="table-wrap">
+          <table className="data-table">
             <thead>
               <tr>
                 {columns.map((col) => (
                   <th
                     key={col.key}
                     onClick={() => handleSort(col.key)}
-                    style={{
-                      textAlign: "left",
-                      borderBottom: "1px solid #ccc",
-                      padding: "6px 12px",
-                      cursor: "pointer",
-                      userSelect: "none",
-                      whiteSpace: "nowrap",
-                    }}
+                    className={`sortable ${col.type === "number" ? "num" : ""}`}
                   >
                     {col.label}
-                    {sortKey === col.key ? (sortDir === "desc" ? " ▼" : " ▲") : ""}
+                    {sortKey === col.key ? (
+                      <span className="arrow">{sortDir === "desc" ? "▼" : "▲"}</span>
+                    ) : (
+                      ""
+                    )}
                   </th>
                 ))}
               </tr>
@@ -299,7 +307,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
             <tbody>
               {sorted.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} style={{ padding: "16px", color: "#666" }}>
+                  <td colSpan={columns.length} className="empty">
                     {activeTab === "Discover" ? "No new candidates found." : "No data."}
                   </td>
                 </tr>
@@ -307,7 +315,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
                 sorted.map((d) => (
                   <tr key={d[rowKeyField]}>
                     {columns.map((col) => (
-                      <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
+                      <td key={col.key} className={col.type === "number" ? "num" : ""}>
                         {col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
                       </td>
                     ))}

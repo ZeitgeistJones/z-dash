@@ -116,19 +116,11 @@ export default function TripwirePanel() {
 
   return (
     <div>
-      <div style={{ marginBottom: "16px" }}>
+      <div className="tripwire-controls">
         <button
           onClick={runTripwire}
           disabled={status === "starting" || status === "running"}
-          style={{
-            padding: "10px 20px",
-            borderRadius: "6px",
-            border: "1px solid #333",
-            background: status === "running" ? "#999" : "#333",
-            color: "#fff",
-            cursor: status === "running" ? "not-allowed" : "pointer",
-            fontWeight: 600,
-          }}
+          className="btn"
         >
           {status === "starting" && "Starting…"}
           {status === "running" && "Running on Dune…"}
@@ -136,41 +128,38 @@ export default function TripwirePanel() {
             "Run Tripwire Check"}
         </button>
         {status === "running" && (
-          <span style={{ marginLeft: "12px", color: "#666", fontSize: "14px" }}>
+          <span className="hint">
             This calls Dune fresh — usually takes 10-30 seconds.
           </span>
         )}
         {status === "error" && (
-          <span style={{ marginLeft: "12px", color: "#c0392b", fontSize: "14px" }}>
+          <span className="error-text">
             {errorMsg}
           </span>
         )}
       </div>
 
       {status === "done" && rows.length === 0 && (
-        <p style={{ color: "#666" }}>No activity in the last 24h.</p>
+        <p className="hint">No activity in the last 24h.</p>
       )}
 
       {rows.length > 0 && (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", width: "100%" }}>
+        <div className="table-wrap">
+          <table className="data-table">
             <thead>
               <tr>
                 {COLUMNS.map((col) => (
                   <th
                     key={col.key}
                     onClick={() => handleSort(col.key)}
-                    style={{
-                      textAlign: "left",
-                      borderBottom: "1px solid #ccc",
-                      padding: "6px 12px",
-                      cursor: "pointer",
-                      userSelect: "none",
-                      whiteSpace: "nowrap",
-                    }}
+                    className={`sortable ${col.key === "Project" ? "" : "num"}`}
                   >
                     {col.label}
-                    {sortKey === col.key ? (sortDir === "desc" ? " ▼" : " ▲") : ""}
+                    {sortKey === col.key ? (
+                      <span className="arrow">{sortDir === "desc" ? "▼" : "▲"}</span>
+                    ) : (
+                      ""
+                    )}
                   </th>
                 ))}
               </tr>
@@ -179,7 +168,7 @@ export default function TripwirePanel() {
               {sorted.map((r) => (
                 <tr key={r["Address"] || r["Project"]}>
                   {COLUMNS.map((col) => (
-                    <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
+                    <td key={col.key} className={col.key === "Project" ? "" : "num"}>
                       {col.format ? formatValue(r[col.key], col.format) : r[col.key] ?? "—"}
                     </td>
                   ))}

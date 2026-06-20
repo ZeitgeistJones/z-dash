@@ -1,7 +1,7 @@
 export default function AboutPanel() {
   return (
-    <div style={{ maxWidth: "800px", lineHeight: "1.7", color: "#333" }}>
-      <h2 style={{ marginTop: 0 }}>About z-dash</h2>
+    <div className="about">
+      <h2>About z-dash</h2>
       <p>
         z-dash tracks AI agent projects on Base — combining on-chain behavior (wallets, transactions, retention)
         from Dune with live price and market cap from CoinGecko. The three core scores are deliberately
@@ -76,7 +76,7 @@ export default function AboutPanel() {
       </p>
 
       <h3>Column Glossary</h3>
-      <table style={{ borderCollapse: "collapse", width: "100%", marginTop: "8px" }}>
+      <table className="glossary">
         <tbody>
           {[
             ["O Rk / M Rk / S Rk", "Rank by Opportunity / Momentum / Sustainability"],
@@ -101,10 +101,8 @@ export default function AboutPanel() {
             ["Price / Market Cap", "Live from CoinGecko, matched by contract address"],
           ].map(([term, def]) => (
             <tr key={term}>
-              <td style={{ padding: "6px 12px", borderBottom: "1px solid #eee", fontWeight: 600, whiteSpace: "nowrap", verticalAlign: "top" }}>
-                {term}
-              </td>
-              <td style={{ padding: "6px 12px", borderBottom: "1px solid #eee", color: "#555" }}>{def}</td>
+              <td className="term">{term}</td>
+              <td className="def">{def}</td>
             </tr>
           ))}
         </tbody>
