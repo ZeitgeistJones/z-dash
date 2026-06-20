@@ -1,11 +1,8 @@
 "use client";
 import { useState } from "react";
 import TripwirePanel from "./TripwirePanel";
+import AboutPanel from "./AboutPanel";
 
-// ============================================================
-// COLUMN GROUPS — each tab shows a different slice of the same
-// underlying data object. No extra fetches, just different views.
-// ============================================================
 const TABS = {
   Overview: [
     { key: "Project", label: "Project", type: "string" },
@@ -136,14 +133,16 @@ export default function DashboardTable({ data, discoveryData = [] }) {
   const [sortDir, setSortDir] = useState("desc");
 
   const isTripwire = activeTab === "Tripwire";
-  const columns = isTripwire ? [] : TABS[activeTab];
+  const isAbout = activeTab === "About";
+  const isSpecialTab = isTripwire || isAbout;
+  const columns = isSpecialTab ? [] : TABS[activeTab];
   const rawSource = activeTab === "Discover" ? discoveryData : data;
-  const sourceData = isTripwire ? [] : Array.isArray(rawSource) ? rawSource : [];
+  const sourceData = isSpecialTab ? [] : Array.isArray(rawSource) ? rawSource : [];
   const rowKeyField = activeTab === "Discover" ? "address" : "Address";
 
   function handleTabChange(tab) {
     setActiveTab(tab);
-    if (tab === "Tripwire") return;
+    if (tab === "Tripwire" || tab === "About") return;
     const firstNumeric = TABS[tab].find((c) => c.type === "number");
     setSortKey(firstNumeric ? firstNumeric.key : TABS[tab][0].key);
     setSortDir("desc");
@@ -158,7 +157,7 @@ export default function DashboardTable({ data, discoveryData = [] }) {
     }
   }
 
-  const sorted = isTripwire
+  const sorted = isSpecialTab
     ? []
     : [...sourceData].sort((a, b) => {
         const col = columns.find((c) => c.key === sortKey) || columns[0];
@@ -212,6 +211,20 @@ export default function DashboardTable({ data, discoveryData = [] }) {
         >
           Tripwire
         </button>
+        <button
+          onClick={() => handleTabChange("About")}
+          style={{
+            padding: "8px 16px",
+            borderRadius: "6px",
+            border: activeTab === "About" ? "1px solid #333" : "1px solid #ccc",
+            background: activeTab === "About" ? "#333" : "#fff",
+            color: activeTab === "About" ? "#fff" : "#333",
+            cursor: "pointer",
+            fontWeight: activeTab === "About" ? 600 : 400,
+          }}
+        >
+          About
+        </button>
       </div>
 
       {activeTab === "Discover" && (
@@ -224,9 +237,10 @@ export default function DashboardTable({ data, discoveryData = [] }) {
 
       {activeTab === "Overview" && <ProfSignalKey />}
 
-      {isTripwire ? (
-        <TripwirePanel />
-      ) : (
+      {isTripwire && <TripwirePanel />}
+      {isAbout && <AboutPanel />}
+
+      {!isSpecialTab && (
         <div style={{ overflowX: "auto" }}>
           <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
             <thead>
