@@ -10,6 +10,7 @@ const columns = [
   { key: "priceUsd", label: "Price", type: "number" },
   { key: "marketCapUsd", label: "Market Cap", type: "number" },
   { key: "signal", label: "Signal", type: "string" },
+  { key: "signalScore", label: "Signal Score", type: "number" },
 ];
 
 export default function DashboardTable({ data }) {
@@ -79,6 +80,7 @@ export default function DashboardTable({ data }) {
               {d.marketCapUsd != null ? `$${Number(d.marketCapUsd).toLocaleString()}` : "—"}
             </td>
             <td style={{ padding: "6px 12px" }}>{d.signal}</td>
+            <td style={{ padding: "6px 12px" }}>{d.signalScore != null ? d.signalScore : "—"}</td>
           </tr>
         ))}
       </tbody>
