@@ -1,15 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 
-function SimpleLineChart({ data, height = 100, color = "#4f8a5b", formatY }) {
+function SimpleLineChart({ data, height = 110, color = "#4f8a5b", formatY }) {
   if (!data || data.length === 0) {
     return <p style={{ color: "#888", fontSize: "13px" }}>No data yet.</p>;
   }
-  const width = 600;
-  const padding = 12;
   const values = data.map((d) => d.y).filter((v) => v != null && !Number.isNaN(v));
   if (values.length === 0) return <p style={{ color: "#888", fontSize: "13px" }}>No data yet.</p>;
 
+  const width = 460;
+  const padding = 10;
   const minY = Math.min(...values);
   const maxY = Math.max(...values);
   const range = maxY - minY || 1;
@@ -21,7 +21,14 @@ function SimpleLineChart({ data, height = 100, color = "#4f8a5b", formatY }) {
   });
 
   const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-  const last = points[points.length - 1];
+
+  const gridCount = 4;
+  const gridLines = Array.from({ length: gridCount }, (_, i) => {
+    const frac = i / (gridCount - 1);
+    const value = maxY - frac * range;
+    const y = padding + frac * (height - padding * 2);
+    return { y, value };
+  });
 
   const labelCount = Math.min(6, points.length);
   const labelStep = Math.max(1, Math.floor((points.length - 1) / (labelCount - 1 || 1)));
@@ -32,23 +39,50 @@ function SimpleLineChart({ data, height = 100, color = "#4f8a5b", formatY }) {
   }
 
   return (
-    <div>
-      <div style={{ textAlign: "right", marginBottom: "2px" }}>
-        <span style={{ fontSize: "13px", fontWeight: 600, color }}>
-          {formatY ? formatY(last.value) : last.value}
-        </span>
+    <div style={{ maxWidth: "640px" }}>
+      <div style={{ display: "flex" }}>
+        <div style={{ width: "60px", flexShrink: 0, position: "relative", height: `${height}px` }}>
+          {gridLines.map((g, i) => (
+            <span
+              key={i}
+              style={{
+                position: "absolute",
+                top: `${g.y}px`,
+                right: "8px",
+                transform: "translateY(-50%)",
+                fontSize: "10px",
+                color: "#999",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {formatY ? formatY(g.value) : Math.round(g.value * 10) / 10}
+            </span>
+          ))}
+        </div>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="none"
+          style={{ width: "100%", height: `${height}px`, display: "block" }}
+        >
+          {gridLines.map((g, i) => (
+            <line
+              key={i}
+              x1={0}
+              y1={g.y}
+              x2={width}
+              y2={g.y}
+              stroke="#eee"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+          <path d={pathD} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          {points.map((p, i) => (
+            <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} />
+          ))}
+        </svg>
       </div>
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="none"
-        style={{ width: "100%", height: `${height}px`, display: "block" }}
-      >
-        <path d={pathD} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-        {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} />
-        ))}
-      </svg>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
+      <div style={{ marginLeft: "60px", display: "flex", justifyContent: "space-between" }}>
         {labelIndices.map((i) => (
           <span key={i} style={{ fontSize: "11px", color: "#888" }}>
             {points[i].label}
@@ -59,9 +93,26 @@ function SimpleLineChart({ data, height = 100, color = "#4f8a5b", formatY }) {
   );
 }
 
+function ChartSection({ title, value, data, color, formatY }) {
+  return (
+    <div style={{ marginBottom: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", maxWidth: "640px", marginBottom: "4px" }}>
+        <span style={{ fontSize: "13px", color: "#666" }}>{title}</span>
+        <span style={{ fontSize: "14px", fontWeight: 600, color }}>{value ?? "—"}</span>
+      </div>
+      <SimpleLineChart data={data} color={color} formatY={formatY} />
+    </div>
+  );
+}
+
 function formatUsd(v) {
   if (v == null) return "—";
   return `$${Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+}
+
+function formatPrice(v) {
+  if (v == null) return "—";
+  return `$${Number(v).toPrecision(4)}`;
 }
 
 function formatDateShort(d) {
@@ -135,8 +186,8 @@ export default function ClawdPanel({ clawdRow, rank, totalProjects }) {
     ["Momentum", clawdRow?.["Mom"], null],
     ["Sustainability", clawdRow?.["Sus"], null],
     ["Profile", clawdRow?.["Prof"], null],
-    ["Price", clawdRow?.priceUsd != null ? `$${Number(clawdRow.priceUsd).toPrecision(4)}` : "—", null],
-    ["Market Cap", clawdRow?.marketCapUsd != null ? `$${Number(clawdRow.marketCapUsd).toLocaleString()}` : "—", null],
+    ["Price", clawdRow?.priceUsd != null ? formatPrice(clawdRow.priceUsd) : "—", null],
+    ["Market Cap", clawdRow?.marketCapUsd != null ? formatUsd(clawdRow.marketCapUsd) : "—", null],
     ["Signal", clawdRow?.signal, null],
   ];
 
@@ -168,12 +219,24 @@ export default function ClawdPanel({ clawdRow, rank, totalProjects }) {
       {status === "error" && <p style={{ color: "#c0392b" }}>Couldn't load history: {errorMsg}</p>}
       {status === "done" && (
         <>
-          <p style={{ fontSize: "13px", color: "#666", marginBottom: "8px" }}>Opportunity Score</p>
-          <SimpleLineChart data={oppSeries} color="#4f8a5b" />
-          <p style={{ fontSize: "13px", color: "#666", margin: "16px 0 8px" }}>Momentum</p>
-          <SimpleLineChart data={momSeries} color="#3a6ea5" />
-          <p style={{ fontSize: "13px", color: "#666", margin: "16px 0 8px" }}>Sustainability</p>
-          <SimpleLineChart data={susSeries} color="#a55a3a" />
+          <ChartSection
+            title="Opportunity Score"
+            value={clawdRow?.["Opp"]}
+            data={oppSeries}
+            color="#4f8a5b"
+          />
+          <ChartSection
+            title="Momentum"
+            value={clawdRow?.["Mom"]}
+            data={momSeries}
+            color="#3a6ea5"
+          />
+          <ChartSection
+            title="Sustainability"
+            value={clawdRow?.["Sus"]}
+            data={susSeries}
+            color="#a55a3a"
+          />
 
           <h3 style={{ marginTop: "24px" }}>Market Trend — last ~60 days</h3>
           {priceHistory.error && (
@@ -181,13 +244,19 @@ export default function ClawdPanel({ clawdRow, rank, totalProjects }) {
               Price/market cap history failed to load: {priceHistory.error}
             </p>
           )}
-          <p style={{ fontSize: "13px", color: "#666", marginBottom: "8px" }}>Market Cap (USD)</p>
-          <SimpleLineChart data={marketCapSeries} color="#8a4f8a" formatY={formatUsd} />
-          <p style={{ fontSize: "13px", color: "#666", margin: "16px 0 8px" }}>Price (USD)</p>
-          <SimpleLineChart
+          <ChartSection
+            title="Market Cap (USD)"
+            value={clawdRow?.marketCapUsd != null ? formatUsd(clawdRow.marketCapUsd) : "—"}
+            data={marketCapSeries}
+            color="#8a4f8a"
+            formatY={formatUsd}
+          />
+          <ChartSection
+            title="Price (USD)"
+            value={clawdRow?.priceUsd != null ? formatPrice(clawdRow.priceUsd) : "—"}
             data={priceSeries}
             color="#4f8a8a"
-            formatY={(v) => `$${Number(v).toPrecision(4)}`}
+            formatY={formatPrice}
           />
         </>
       )}
