@@ -1,8 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TripwirePanel from "./TripwirePanel";
 import AboutPanel from "./AboutPanel";
 import ClawdPanel from "./ClawdPanel";
+
+const TAB_ORDER = ["Overview", "Activity", "Wallets", "Buyers & Risk", "Discover", "CLAWD", "Tripwire", "About"];
 
 const TABS = {
   Overview: [
@@ -246,6 +248,22 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     setSortDir("desc");
   }
 
+  useEffect(() => {
+    function handleKeyDown(e) {
+      const tag = e.target.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) return;
+      if (e.key !== "[" && e.key !== "]") return;
+      const currentIndex = TAB_ORDER.indexOf(activeTab);
+      if (currentIndex === -1) return;
+      const direction = e.key === "]" ? 1 : -1;
+      const nextIndex = (currentIndex + direction + TAB_ORDER.length) % TAB_ORDER.length;
+      handleTabChange(TAB_ORDER[nextIndex]);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
   function handleSort(key) {
     if (sortKey === key) {
       setSortDir(sortDir === "desc" ? "asc" : "desc");
@@ -277,7 +295,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     <div>
       <StatusBanner lastUpdated={lastUpdated} />
 
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "6px", flexWrap: "wrap" }}>
         {Object.keys(TABS).map((tab) => (
           <button
             key={tab}
@@ -339,6 +357,10 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
           About
         </button>
       </div>
+
+      <p style={{ fontSize: "12px", color: "#aaa", marginBottom: "16px" }}>
+        Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs.
+      </p>
 
       {activeTab === "Discover" && (
         <p style={{ color: "#666", marginBottom: "12px", fontSize: "14px" }}>
