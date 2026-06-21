@@ -4,19 +4,17 @@ import { useState, useRef } from "react";
 const COLUMNS = [
   { key: "Project", label: "Project" },
   { key: "marketCapUsd", label: "Market Cap", format: "usd" },
-  { key: "Wallets 15m", label: "Wallets 15m" },
+  { key: "Wallets 15m", label: "Active Wallets 15m" },
   { key: "Txs 15m", label: "Txs 15m" },
-  { key: "New Buyers 15m", label: "New Buyers 15m" },
-  { key: "New Sellers 15m", label: "New Sellers 15m" },
-  { key: "Wallets 1h", label: "Wallets 1h" },
+  { key: "New Wallets 15m", label: "New Wallets 15m" },
+  { key: "Wallets 1h", label: "Active Wallets 1h" },
   { key: "Txs 1h", label: "Txs 1h" },
-  { key: "New Buyers 1h", label: "New Buyers 1h" },
-  { key: "New Sellers 1h", label: "New Sellers 1h" },
-  { key: "Wallets 6h", label: "Wallets 6h" },
+  { key: "New Wallets 1h", label: "New Wallets 1h" },
+  { key: "Wallets 6h", label: "Active Wallets 6h" },
   { key: "Txs 6h", label: "Txs 6h" },
   { key: "New Buyers 6h", label: "New Buyers 6h" },
   { key: "New Sellers 6h", label: "New Sellers 6h" },
-  { key: "Wallets 24h", label: "Wallets 24h" },
+  { key: "Wallets 24h", label: "Active Wallets 24h" },
   { key: "Txs 24h", label: "Txs 24h" },
   { key: "New Buyers 24h", label: "New Buyers 24h" },
   { key: "New Sellers 24h", label: "New Sellers 24h" },
@@ -29,7 +27,7 @@ function formatValue(val, format) {
 }
 
 export default function TripwirePanel() {
-  const [status, setStatus] = useState("idle");
+  const [status, setStatus] = useState("idle"); // idle | starting | running | done | error
   const [rows, setRows] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
   const [sortKey, setSortKey] = useState("Txs 15m");
@@ -82,6 +80,7 @@ export default function TripwirePanel() {
             setStatus("error");
             setErrorMsg("Dune query failed or was cancelled.");
           }
+          // otherwise still running, keep polling
         } catch {
           // transient fetch error, keep trying until attempt limit
         }
