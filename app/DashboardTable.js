@@ -238,11 +238,12 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const isTripwire = activeTab === "Tripwire";
   const isAbout = activeTab === "About";
   const isClawd = activeTab === "CLAWD";
+  const isDiscover = activeTab === "Discover";
   const isSpecialTab = isTripwire || isAbout || isClawd;
   const columns = isSpecialTab ? [] : TABS[activeTab];
-  const rawSource = activeTab === "Discover" ? discoveryData : data;
+  const rawSource = isDiscover ? discoveryData : data;
   const sourceData = isSpecialTab ? [] : Array.isArray(rawSource) ? rawSource : [];
-  const rowKeyField = activeTab === "Discover" ? "address" : "Address";
+  const rowKeyField = isDiscover ? "address" : "Address";
 
   const dataArr = Array.isArray(data) ? data : [];
   const clawdRow = dataArr.find((d) => d["Project"] === "CLAWD") || null;
@@ -324,6 +325,43 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         }
       });
 
+  const tableBody = !isSpecialTab && (
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
+        <thead>
+          <tr>
+            {columns.map((col) => (
+              <th key={col.key} onClick={() => handleSort(col.key)} style={{ textAlign: "left", borderBottom: "1px solid #ccc", padding: "6px 12px", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}>
+                {col.label}
+                {sortKey === col.key ? (sortDir === "desc" ? " ▼" : " ▲") : ""}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.length === 0 ? (
+            <tr><td colSpan={columns.length} style={{ padding: "16px", color: "#666" }}>{isDiscover ? "No new candidates found." : "No data."}</td></tr>
+          ) : (
+            sorted.map((d, idx) => {
+              const isRowGated = !isDiscover && idx >= FREE_ROW_COUNT && !hasAccess;
+              return (
+                <tr key={d[rowKeyField]}>
+                  {columns.map((col) => (
+                    <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
+                      <GatedCell blurred={isRowGated}>
+                        {col.key === "read" ? <ReadBadge value={d[col.key]} /> : col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
+                      </GatedCell>
+                    </td>
+                  ))}
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
     <div>
       <StatusBanner lastUpdated={lastUpdated} />
@@ -349,7 +387,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs.
       </p>
 
-      {activeTab === "Discover" && (
+      {isDiscover && (
         <p style={{ color: "#666", marginBottom: "12px", fontSize: "14px" }}>
           AI-category coins from CoinGecko (AI Agents, AI Agent Launchpad, AI Framework, DeFAI) with a Base
           contract address, not yet in your tracked list. Verify each before adding — category tagging on
@@ -376,41 +414,10 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         </GatedSection>
       )}
 
-      {!isSpecialTab && (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
-            <thead>
-              <tr>
-                {columns.map((col) => (
-                  <th key={col.key} onClick={() => handleSort(col.key)} style={{ textAlign: "left", borderBottom: "1px solid #ccc", padding: "6px 12px", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}>
-                    {col.label}
-                    {sortKey === col.key ? (sortDir === "desc" ? " ▼" : " ▲") : ""}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.length === 0 ? (
-                <tr><td colSpan={columns.length} style={{ padding: "16px", color: "#666" }}>{activeTab === "Discover" ? "No new candidates found." : "No data."}</td></tr>
-              ) : (
-                sorted.map((d, idx) => {
-                  const isRowGated = idx >= FREE_ROW_COUNT && !hasAccess;
-                  return (
-                    <tr key={d[rowKeyField]}>
-                      {columns.map((col) => (
-                        <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
-                          <GatedCell blurred={isRowGated}>
-                            {col.key === "read" ? <ReadBadge value={d[col.key]} /> : col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
-                          </GatedCell>
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+      {isDiscover ? (
+        <GatedSection blurred={!hasAccess}>{tableBody}</GatedSection>
+      ) : (
+        tableBody
       )}
     </div>
   );
