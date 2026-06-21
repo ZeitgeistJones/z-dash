@@ -1,10 +1,28 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useAccount, useReadContract } from "wagmi";
+import { base } from "wagmi/chains";
 import TripwirePanel from "./TripwirePanel";
 import AboutPanel from "./AboutPanel";
 import ClawdPanel from "./ClawdPanel";
+import GateButton from "./GateButton";
 
 const TAB_ORDER = ["Overview", "Activity", "Wallets", "Buyers & Risk", "Discover", "CLAWD", "Tripwire", "About"];
+
+const GATE_ADDRESS = "0xc22B7b983EC81523c969753c2385106835E8CfCE";
+const GATE_ABI = [
+  {
+    name: "hasAccess",
+    type: "function",
+    inputs: [
+      { name: "wallet", type: "address" },
+      { name: "tier", type: "uint8" },
+    ],
+    outputs: [{ type: "bool" }],
+    stateMutability: "view",
+  },
+];
+const GATED_KEYS = new Set(["Opp", "Mom", "Sus"]);
 
 const TABS = {
   Overview: [
@@ -90,6 +108,15 @@ function ReadBadge({ value }) {
   );
 }
 
+function GatedCell({ blurred, children }) {
+  if (!blurred) return children;
+  return (
+    <span style={{ filter: "blur(6px)", userSelect: "none", display: "inline-block" }}>
+      {children}
+    </span>
+  );
+}
+
 function formatValue(val, format) {
   if (val == null || val === "") return "—";
   if (format === "price") return `$${Number(val).toPrecision(4)}`;
@@ -161,6 +188,17 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const [activeTab, setActiveTab] = useState("Overview");
   const [sortKey, setSortKey] = useState("Opp");
   const [sortDir, setSortDir] = useState("desc");
+
+  const { address } = useAccount();
+  const { data: hasAccessRaw } = useReadContract({
+    address: GATE_ADDRESS,
+    abi: GATE_ABI,
+    functionName: "hasAccess",
+    args: address ? [address, 1] : undefined,
+    chainId: base.id,
+    query: { enabled: !!address },
+  });
+  const hasAccess = !!hasAccessRaw;
 
   const isTripwire = activeTab === "Tripwire";
   const isAbout = activeTab === "About";
@@ -254,6 +292,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   return (
     <div>
       <StatusBanner lastUpdated={lastUpdated} />
+      <GateButton hasAccess={hasAccess} />
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "6px", flexWrap: "wrap" }}>
         {Object.keys(TABS).map((tab) => (
@@ -319,11 +358,16 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
               ) : (
                 sorted.map((d) => (
                   <tr key={d[rowKeyField]}>
-                    {columns.map((col) => (
-                      <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
-                        {col.key === "read" ? <ReadBadge value={d[col.key]} /> : col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
-                      </td>
-                    ))}
+                    {columns.map((col) => {
+                      const isGated = activeTab === "Overview" && GATED_KEYS.has(col.key) && !hasAccess;
+                      return (
+                        <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
+                          <GatedCell blurred={isGated}>
+                            {col.key === "read" ? <ReadBadge value={d[col.key]} /> : col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
+                          </GatedCell>
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))
               )}
