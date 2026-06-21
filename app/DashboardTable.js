@@ -22,7 +22,7 @@ const GATE_ABI = [
     stateMutability: "view",
   },
 ];
-const GATED_KEYS = new Set(["Opp", "Mom", "Sus"]);
+const FREE_ROW_COUNT = 5;
 
 const TABS = {
   Overview: [
@@ -114,6 +114,41 @@ function GatedCell({ blurred, children }) {
     <span style={{ filter: "blur(6px)", userSelect: "none", display: "inline-block" }}>
       {children}
     </span>
+  );
+}
+
+function GatedSection({ blurred, children }) {
+  if (!blurred) return children;
+  return (
+    <div style={{ position: "relative" }}>
+      <div style={{ filter: "blur(8px)", pointerEvents: "none", userSelect: "none" }}>
+        {children}
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "14px",
+            fontWeight: 600,
+            color: "#333",
+            background: "#fff",
+            padding: "12px 20px",
+            borderRadius: "8px",
+            border: "1px solid #e0e0e0",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}
+        >
+          🔒 Connect a wallet holding 10M+ CLAWD to unlock
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -324,19 +359,21 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
 
       {activeTab === "Overview" && <ProfSignalKey />}
 
-      {isTripwire && <TripwirePanel />}
+      {isTripwire && <TripwirePanel hasAccess={hasAccess} />}
       {isAbout && <AboutPanel />}
       {isClawd && (
-        <ClawdPanel
-          clawdRow={clawdRow}
-          totalProjects={totalProjects}
-          opportunityRank={opportunityRank}
-          momentumRank={momentumRank}
-          sustainabilityRank={sustainabilityRank}
-          marketCapRank={marketCapRank}
-          walletsRank={walletsRank}
-          ranks={ranks}
-        />
+        <GatedSection blurred={!hasAccess}>
+          <ClawdPanel
+            clawdRow={clawdRow}
+            totalProjects={totalProjects}
+            opportunityRank={opportunityRank}
+            momentumRank={momentumRank}
+            sustainabilityRank={sustainabilityRank}
+            marketCapRank={marketCapRank}
+            walletsRank={walletsRank}
+            ranks={ranks}
+          />
+        </GatedSection>
       )}
 
       {!isSpecialTab && (
@@ -356,20 +393,20 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
               {sorted.length === 0 ? (
                 <tr><td colSpan={columns.length} style={{ padding: "16px", color: "#666" }}>{activeTab === "Discover" ? "No new candidates found." : "No data."}</td></tr>
               ) : (
-                sorted.map((d) => (
-                  <tr key={d[rowKeyField]}>
-                    {columns.map((col) => {
-                      const isGated = activeTab === "Overview" && GATED_KEYS.has(col.key) && !hasAccess;
-                      return (
+                sorted.map((d, idx) => {
+                  const isRowGated = idx >= FREE_ROW_COUNT && !hasAccess;
+                  return (
+                    <tr key={d[rowKeyField]}>
+                      {columns.map((col) => (
                         <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
-                          <GatedCell blurred={isGated}>
+                          <GatedCell blurred={isRowGated}>
                             {col.key === "read" ? <ReadBadge value={d[col.key]} /> : col.format ? formatValue(d[col.key], col.format) : d[col.key] ?? "—"}
                           </GatedCell>
                         </td>
-                      );
-                    })}
-                  </tr>
-                ))
+                      ))}
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
