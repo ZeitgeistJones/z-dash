@@ -26,7 +26,7 @@ function formatValue(val, format) {
   return val;
 }
 
-export default function TripwirePanel() {
+export default function TripwirePanel({ hasAccess }) {
   const [status, setStatus] = useState("idle"); // idle | starting | running | done | error
   const [rows, setRows] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
@@ -56,12 +56,12 @@ export default function TripwirePanel() {
       setStatus("running");
       pollRef.current = setInterval(async () => {
         attemptsRef.current += 1;
-if (attemptsRef.current > 90) {
-  stopPolling();
-  setStatus("error");
-  setErrorMsg("Taking longer than expected. Try again in a moment.");
-  return;
-}
+        if (attemptsRef.current > 90) {
+          stopPolling();
+          setStatus("error");
+          setErrorMsg("Taking longer than expected. Try again in a moment.");
+          return;
+        }
         try {
           const statusRes = await fetch(
             `/api/tripwire/status?executionId=${startJson.executionId}`
@@ -113,6 +113,30 @@ if (attemptsRef.current > 90) {
     return sortDir === "desc" ? bVal - aVal : aVal - bVal;
   });
 
+  if (!hasAccess) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <button
+          disabled
+          style={{
+            padding: "10px 20px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            background: "#eee",
+            color: "#999",
+            cursor: "not-allowed",
+            fontWeight: 600,
+          }}
+        >
+          🔒 Run Tripwire Check
+        </button>
+        <span style={{ color: "#888", fontSize: "13px" }}>
+          Connect a wallet holding 10M+ CLAWD to use Tripwire.
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div style={{ marginBottom: "16px" }}>
@@ -135,10 +159,10 @@ if (attemptsRef.current > 90) {
             "Run Tripwire Check"}
         </button>
         {status === "running" && (
-  <span style={{ marginLeft: "12px", color: "#666", fontSize: "14px" }}>
-    This calls Dune fresh — can take up to a couple minutes now that it checks full wallet history.
-  </span>
-)}
+          <span style={{ marginLeft: "12px", color: "#666", fontSize: "14px" }}>
+            This calls Dune fresh — can take up to a couple minutes now that it checks full wallet history.
+          </span>
+        )}
         {status === "error" && (
           <span style={{ marginLeft: "12px", color: "#c0392b", fontSize: "14px" }}>
             {errorMsg}
