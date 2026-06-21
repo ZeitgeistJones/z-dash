@@ -135,10 +135,10 @@ if (attemptsRef.current > 90) {
             "Run Tripwire Check"}
         </button>
         {status === "running" && (
-          <span style={{ marginLeft: "12px", color: "#666", fontSize: "14px" }}>
-            This calls Dune fresh — usually takes 10-30 seconds.
-          </span>
-        )}
+  <span style={{ marginLeft: "12px", color: "#666", fontSize: "14px" }}>
+    This calls Dune fresh — can take up to a couple minutes now that it checks full wallet history.
+  </span>
+)}
         {status === "error" && (
           <span style={{ marginLeft: "12px", color: "#c0392b", fontSize: "14px" }}>
             {errorMsg}
