@@ -56,12 +56,12 @@ export default function TripwirePanel() {
       setStatus("running");
       pollRef.current = setInterval(async () => {
         attemptsRef.current += 1;
-        if (attemptsRef.current > 40) {
-          stopPolling();
-          setStatus("error");
-          setErrorMsg("Taking longer than expected. Try again in a moment.");
-          return;
-        }
+if (attemptsRef.current > 90) {
+  stopPolling();
+  setStatus("error");
+  setErrorMsg("Taking longer than expected. Try again in a moment.");
+  return;
+}
         try {
           const statusRes = await fetch(
             `/api/tripwire/status?executionId=${startJson.executionId}`
