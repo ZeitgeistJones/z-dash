@@ -20,6 +20,32 @@ const COLUMNS = [
   { key: "New Sellers 24h", label: "New Sellers 24h" },
 ];
 
+const TRIPWIRE_KEY_METRICS = [
+  { name: "Txs 15m / 1h / 6h / 24h",          desc: "On-chain transactions in each window — a spike means something just happened" },
+  { name: "Active Wallets 15m / 1h / 6h / 24h", desc: "Unique wallets that transacted — distinguishes broad activity from one whale moving" },
+  { name: "New Wallets 15m / 1h",               desc: "Wallets interacting for the first time — new arrivals, not existing holders" },
+  { name: "New Buyers 6h / 24h",                desc: "Wallets buying for the first time in the window — a demand signal" },
+  { name: "New Sellers 6h / 24h",               desc: "Wallets selling for the first time in the window — a distribution signal" },
+  { name: "Market Cap",                          desc: "Live market cap from CoinGecko at time of query" },
+];
+
+function MetricPill({ name, desc }) {
+  return (
+    <div style={{
+      background: "var(--bg-muted)",
+      border: "1px solid var(--border)",
+      borderRadius: "8px",
+      padding: "8px 14px",
+      minWidth: "180px",
+      maxWidth: "240px",
+      flex: "1 1 180px",
+    }}>
+      <div style={{ fontWeight: 700, fontSize: "12px", color: "var(--text)", marginBottom: "3px" }}>{name}</div>
+      <div style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4" }}>{desc}</div>
+    </div>
+  );
+}
+
 function formatValue(val, format) {
   if (val == null || val === "") return "—";
   if (format === "usd") return `$${Number(val).toLocaleString()}`;
@@ -27,7 +53,7 @@ function formatValue(val, format) {
 }
 
 export default function TripwirePanel({ hasAccess }) {
-  const [status, setStatus] = useState("idle"); // idle | starting | running | done | error
+  const [status, setStatus] = useState("idle");
   const [rows, setRows] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
   const [sortKey, setSortKey] = useState("Txs 15m");
@@ -63,24 +89,17 @@ export default function TripwirePanel({ hasAccess }) {
           return;
         }
         try {
-          const statusRes = await fetch(
-            `/api/tripwire/status?executionId=${startJson.executionId}`
-          );
+          const statusRes = await fetch(`/api/tripwire/status?executionId=${startJson.executionId}`);
           const statusJson = await statusRes.json();
-
           if (statusJson.state === "QUERY_STATE_COMPLETED") {
             stopPolling();
             setRows(statusJson.rows || []);
             setStatus("done");
-          } else if (
-            statusJson.state === "QUERY_STATE_FAILED" ||
-            statusJson.state === "QUERY_STATE_CANCELLED"
-          ) {
+          } else if (statusJson.state === "QUERY_STATE_FAILED" || statusJson.state === "QUERY_STATE_CANCELLED") {
             stopPolling();
             setStatus("error");
             setErrorMsg("Dune query failed or was cancelled.");
           }
-          // otherwise still running, keep polling
         } catch {
           // transient fetch error, keep trying until attempt limit
         }
@@ -113,24 +132,48 @@ export default function TripwirePanel({ hasAccess }) {
     return sortDir === "desc" ? bVal - aVal : aVal - bVal;
   });
 
+  const isRunning = status === "starting" || status === "running";
+
+  // Explanation block — always visible
+  const explanationBlock = (
+    <div style={{
+      background: "var(--bg-subtle)",
+      border: "1px solid var(--border)",
+      borderRadius: "8px",
+      padding: "12px 16px",
+      marginBottom: "20px",
+      fontSize: "13px",
+      color: "var(--text-muted)",
+      lineHeight: "1.6",
+      maxWidth: "680px",
+    }}>
+      Tripwire is an on-demand pulse check — it runs a fresh Dune query right now and returns activity from
+      the last 15 minutes, 1 hour, 6 hours, and 24 hours across every tracked project. Use it right after
+      news breaks, a token gets mentioned, or you want to know what's moving at this exact moment. It takes
+      1–2 minutes to run. Usage may be limited to stay within free-tier Dune query credits.
+    </div>
+  );
+
   if (!hasAccess) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "24px" }}>
+        {explanationBlock}
         <button
           disabled
           style={{
-            padding: "10px 20px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-            background: "#eee",
-            color: "#999",
+            padding: "16px 40px",
+            borderRadius: "8px",
+            border: "1px solid var(--border-strong)",
+            background: "var(--bg-muted)",
+            color: "var(--text-faint)",
             cursor: "not-allowed",
-            fontWeight: 600,
+            fontWeight: 700,
+            fontSize: "16px",
           }}
         >
           🔒 Run Tripwire Check
         </button>
-        <span style={{ color: "#888", fontSize: "13px" }}>
+        <span style={{ color: "var(--text-faint)", fontSize: "13px", marginTop: "10px" }}>
           Connect a wallet holding 10M+ CLAWD to use Tripwire.
         </span>
       </div>
@@ -139,39 +182,56 @@ export default function TripwirePanel({ hasAccess }) {
 
   return (
     <div>
-      <div style={{ marginBottom: "16px" }}>
+      {/* Explanation + button — centered, always visible */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "28px" }}>
+        {explanationBlock}
         <button
           onClick={runTripwire}
-          disabled={status === "starting" || status === "running"}
+          disabled={isRunning}
           style={{
-            padding: "10px 20px",
-            borderRadius: "6px",
-            border: "1px solid #333",
-            background: status === "running" ? "#999" : "#333",
-            color: "#fff",
-            cursor: status === "running" ? "not-allowed" : "pointer",
-            fontWeight: 600,
+            padding: "16px 40px",
+            borderRadius: "8px",
+            border: isRunning ? "1px solid var(--border-strong)" : "1px solid var(--btn-active-bg)",
+            background: isRunning ? "var(--text-faint)" : "var(--btn-active-bg)",
+            color: "var(--btn-active-text)",
+            cursor: isRunning ? "not-allowed" : "pointer",
+            fontWeight: 700,
+            fontSize: "16px",
           }}
         >
-          {status === "starting" && "Starting…"}
-          {status === "running" && "Running on Dune…"}
-          {(status === "idle" || status === "done" || status === "error") &&
-            "Run Tripwire Check"}
+          {status === "starting" && "⚡ Starting…"}
+          {status === "running" && "⚡ Running on Dune…"}
+          {(status === "idle" || status === "done" || status === "error") && "⚡ Run Tripwire Check"}
         </button>
+
         {status === "running" && (
-          <span style={{ marginLeft: "12px", color: "#666", fontSize: "14px" }}>
-            This calls Dune fresh — can take up to a couple minutes now that it checks full wallet history.
+          <span style={{ marginTop: "10px", color: "var(--text-muted)", fontSize: "13px", textAlign: "center" }}>
+            Calling Dune fresh — takes 1–2 minutes.
           </span>
         )}
         {status === "error" && (
-          <span style={{ marginLeft: "12px", color: "#c0392b", fontSize: "14px" }}>
+          <span style={{ marginTop: "10px", color: "#c0392b", fontSize: "13px" }}>
             {errorMsg}
           </span>
         )}
       </div>
 
+      {/* Column key — only after results load */}
+      {rows.length > 0 && (
+        <details style={{ marginBottom: "16px" }}>
+          <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "14px", color: "var(--text)", marginBottom: "8px" }}>
+            Key: what am I looking at?
+          </summary>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+            {TRIPWIRE_KEY_METRICS.map((m) => (
+              <MetricPill key={m.name} name={m.name} desc={m.desc} />
+            ))}
+          </div>
+        </details>
+      )}
+
       {status === "done" && rows.length === 0 && (
-        <p style={{ color: "#666" }}>No activity in the last 24h.</p>
+        <p style={{ color: "var(--text-muted)", textAlign: "center" }}>No activity in the last 24h.</p>
       )}
 
       {rows.length > 0 && (
@@ -185,11 +245,12 @@ export default function TripwirePanel({ hasAccess }) {
                     onClick={() => handleSort(col.key)}
                     style={{
                       textAlign: "left",
-                      borderBottom: "1px solid #ccc",
+                      borderBottom: "1px solid var(--border-strong)",
                       padding: "6px 12px",
                       cursor: "pointer",
                       userSelect: "none",
                       whiteSpace: "nowrap",
+                      color: "var(--text)",
                     }}
                   >
                     {col.label}
@@ -202,7 +263,7 @@ export default function TripwirePanel({ hasAccess }) {
               {sorted.map((r) => (
                 <tr key={r["Address"] || r["Project"]}>
                   {COLUMNS.map((col) => (
-                    <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
+                    <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap", color: "var(--text)" }}>
                       {col.format ? formatValue(r[col.key], col.format) : r[col.key] ?? "—"}
                     </td>
                   ))}
