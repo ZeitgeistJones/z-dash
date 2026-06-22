@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
   const [dark, setDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     setDark(document.documentElement.getAttribute("data-theme") === "dark");
   }, []);
 
@@ -20,27 +22,33 @@ export default function ThemeToggle() {
     }
   }
 
+  // Avoid hydration mismatch — render a placeholder until mounted
+  if (!mounted) {
+    return <div style={{ width: "80px", height: "34px" }} />;
+  }
+
   return (
     <button
       onClick={toggle}
-      title={dark ? "Switch to light mode" : "Switch to dark mode"}
       style={{
-        padding: "6px 14px",
+        flexShrink: 0,
+        padding: "8px 18px",
         borderRadius: "20px",
         border: "1px solid var(--border-strong)",
-        background: "var(--bg-muted)",
-        color: "var(--text-muted)",
+        background: dark ? "var(--btn-active-bg)" : "var(--bg-muted)",
+        color: dark ? "var(--btn-active-text)" : "var(--text-muted)",
         cursor: "pointer",
         fontSize: "13px",
-        fontWeight: 500,
+        fontWeight: 600,
         display: "flex",
         alignItems: "center",
-        gap: "6px",
-        flexShrink: 0,
-        transition: "background 0.2s, color 0.2s",
+        gap: "7px",
+        whiteSpace: "nowrap",
+        transition: "background 0.2s, color 0.2s, border-color 0.2s",
       }}
     >
-      {dark ? "○ light" : "● dark"}
+      <span style={{ fontSize: "15px", lineHeight: 1 }}>{dark ? "☀︎" : "☽"}</span>
+      {dark ? "Light" : "Dark"}
     </button>
   );
 }
