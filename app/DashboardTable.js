@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { base } from "wagmi/chains";
 import TripwirePanel from "./TripwirePanel";
@@ -278,7 +278,7 @@ function ProfSignalKey() {
   return (
     <details style={{ marginBottom: "16px", fontSize: "14px", color: "var(--text)" }}>
       <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text)", marginBottom: "10px" }}>
-        Key: what do Prof + Signal + Read mean?
+        Key: Profile, Signal & Read explained
       </summary>
       <p style={{ marginTop: "8px", marginBottom: "12px", color: "var(--text-muted)", fontSize: "13px", lineHeight: "1.5" }}>
         <strong>Prof</strong> = behavioral profile (price-independent). <strong>Signal</strong> = does price agree with volume this week. <strong>Read</strong> = the named verdict for that combination.
@@ -328,70 +328,72 @@ function ProfSignalKey() {
   );
 }
 
-// ── Task 2: Tab contextual keys ───────────────────────────────────────────────
-function MetricPill({ name, desc }) {
-  return (
-    <div style={{
-      background: "var(--bg-muted)",
-      border: "1px solid var(--border)",
-      borderRadius: "8px",
-      padding: "8px 14px",
-      minWidth: "180px",
-      maxWidth: "220px",
-      flex: "1 1 180px",
-    }}>
-      <div style={{ fontWeight: 700, fontSize: "12px", color: "var(--text)", marginBottom: "3px" }}>{name}</div>
-      <div style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4" }}>{desc}</div>
-    </div>
-  );
-}
+// ── Column-aligned key: measures th positions, places pills above each column ──
+function ColumnAlignedKey({ columns, tableRef, label }) {
+  const [positions, setPositions] = useState([]);
+  const [open, setOpen] = useState(false);
 
-const TAB_KEYS = {
-  Activity: {
-    label: "Key: what do these columns mean?",
-    metrics: [
-      { name: "Vol 30d",   desc: "Total dollars traded on DEX in 30 days" },
-      { name: "Vol Grw %", desc: "Did trading volume go up or down vs last week" },
-      { name: "Tx Grw %",  desc: "Did transaction count go up or down vs last week" },
-      { name: "Vol/Tx",    desc: "Average dollar size per trade — higher means more serious traders" },
-      { name: "Txs/User",  desc: "How many times the average wallet transacted — higher means more engaged" },
-    ],
-  },
-  Wallets: {
-    label: "Key: what do these columns mean?",
-    metrics: [
-      { name: "Wallets 30d",  desc: "Total unique wallets active this month" },
-      { name: "User Grw %",   desc: "Did the wallet count go up or down vs last week" },
-      { name: "New Wallet %", desc: "What share of this month's users are brand new" },
-      { name: "Retention %",  desc: "Are this week's users the same people as last week — over 100% means growing" },
-      { name: "Avg Txs Ret",  desc: "How active are the returning users specifically" },
-    ],
-  },
-  "Buyers & Risk": {
-    label: "Key: what do these columns mean?",
-    metrics: [
-      { name: "Qlty %",      desc: "How clean the activity looks — penalizes bots and suspicious patterns" },
-      { name: "Risk %",      desc: "How concentrated volume is in a few wallets — lower is healthier" },
-      { name: "Top10 %",     desc: "What share of all transactions come from just the top 10 wallets" },
-      { name: "1st Buyers",  desc: "Wallets buying this token for the very first time — a demand signal" },
-      { name: "1st Sellers", desc: "Wallets selling for the very first time — a distribution signal" },
-    ],
-  },
-};
+  useLayoutEffect(() => {
+    if (!open) return;
+    function measure() {
+      if (!tableRef.current) return;
+      const ths = tableRef.current.querySelectorAll("thead th");
+      const containerEl = tableRef.current.closest("[data-key-container]");
+      if (!containerEl) return;
+      const containerRect = containerEl.getBoundingClientRect();
+      const pos = Array.from(ths).map((th) => {
+        const r = th.getBoundingClientRect();
+        return { left: r.left - containerRect.left, width: r.width };
+      });
+      setPositions(pos);
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [open, tableRef, columns]);
 
-function TabKey({ tab }) {
-  const keyData = TAB_KEYS[tab];
-  if (!keyData) return null;
   return (
-    <details style={{ marginBottom: "16px" }}>
-      <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "14px", color: "var(--text)", marginBottom: "8px" }}>
-        {keyData.label}
+    <details
+      style={{ marginBottom: "8px" }}
+      onToggle={(e) => setOpen(e.target.open)}
+    >
+      <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "14px", color: "var(--text)" }}>
+        {label}
       </summary>
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
-        {keyData.metrics.map((m) => (
-          <MetricPill key={m.name} name={m.name} desc={m.desc} />
-        ))}
-      </div>
+      {open && positions.length > 0 && (
+        <div style={{ position: "relative", height: "0px", overflow: "visible", marginTop: "6px" }}>
+          {columns.map((col, i) => {
+            const pos = positions[i];
+            if (!pos || !col.tooltip) return null;
+            return (
+              <div
+                key={col.key}
+                style={{
+                  position: "absolute",
+                  left: pos.left,
+                  width: Math.max(pos.width, 140),
+                  top: 0,
+                  background: "var(--bg-muted)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "6px",
+                  padding: "6px 10px",
+                  fontSize: "11px",
+                  zIndex: 10,
+                  pointerEvents: "none",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                }}
+              >
+                <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {col.label}
+                </div>
+                <div style={{ color: "var(--text-muted)", lineHeight: "1.4" }}>
+                  {col.tooltip}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </details>
   );
 }
@@ -400,6 +402,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const [activeTab, setActiveTab] = useState("Overview");
   const [sortKey, setSortKey] = useState("Opp");
   const [sortDir, setSortDir] = useState("desc");
+  const tableRef = useRef(null);
 
   const { address } = useAccount();
   const { data: hasAccessRaw } = useReadContract({
@@ -506,8 +509,8 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   }
 
   const tableBody = !isSpecialTab && (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
+    <div data-key-container="" style={{ overflowX: "auto" }}>
+      <table ref={tableRef} style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
         <thead>
           <tr>
             {columns.map((col) => (
@@ -609,7 +612,13 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       )}
 
       {activeTab === "Overview" && <ProfSignalKey />}
-      {TAB_KEYS[activeTab] && <TabKey tab={activeTab} />}
+      {!isSpecialTab && !isDiscover && (
+        <ColumnAlignedKey
+          columns={columns}
+          tableRef={tableRef}
+          label="Key: what do these columns mean?"
+        />
+      )}
 
       {isTripwire && <TripwirePanel hasAccess={hasAccess} />}
       {isAbout && <AboutPanel />}
