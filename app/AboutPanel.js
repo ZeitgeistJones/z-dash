@@ -92,7 +92,7 @@ export default function AboutPanel() {
               ["Txs/User", "Average transactions per user, 30d"],
               ["Wallets 30d / 7d", "Unique wallet counts"],
               ["New Wallets / Returning Wallets", "New vs. returning wallets, 30d"],
-              ["New %", "Share of wallets that are new, 30d"],
+              ["New Wallet %", "Share of wallets that are new, 30d"],
               ["Retention %", "This week's users ÷ last week's users"],
               ["Avg Txs Ret", "Average transactions by returning wallets, 7d"],
               ["Traders", "Unique DEX traders, 30d"],
