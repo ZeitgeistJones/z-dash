@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 export default function ThemeToggle() {
   const [dark, setDark] = useState(false);
 
-  // Sync initial state from what the inline script already set
   useEffect(() => {
     setDark(document.documentElement.getAttribute("data-theme") === "dark");
   }, []);
@@ -27,10 +26,10 @@ export default function ThemeToggle() {
       title={dark ? "Switch to light mode" : "Switch to dark mode"}
       style={{
         padding: "6px 14px",
-        borderRadius: "6px",
+        borderRadius: "20px",
         border: "1px solid var(--border-strong)",
         background: "var(--bg-muted)",
-        color: "var(--text)",
+        color: "var(--text-muted)",
         cursor: "pointer",
         fontSize: "13px",
         fontWeight: 500,
@@ -38,9 +37,10 @@ export default function ThemeToggle() {
         alignItems: "center",
         gap: "6px",
         flexShrink: 0,
+        transition: "background 0.2s, color 0.2s",
       }}
     >
-      {dark ? "☀ Light" : "☾ Dark"}
+      {dark ? "○ light" : "● dark"}
     </button>
   );
 }
