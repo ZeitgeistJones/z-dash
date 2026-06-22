@@ -1,5 +1,5 @@
-import { getDashboardData } from "../lib/getData";
-import { getDiscoveryData } from "../lib/getDiscoveryData";
+import { getDashboardData } from "@/lib/getData";
+import { getDiscoveryData } from "@/lib/getDiscoveryData";
 import DashboardTable from "./DashboardTable";
 
 export const revalidate = 3600;
