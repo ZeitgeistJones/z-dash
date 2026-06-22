@@ -1,11 +1,66 @@
 "use client";
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { base } from "wagmi/chains";
 import TripwirePanel from "./TripwirePanel";
 import AboutPanel from "./AboutPanel";
 import ClawdPanel from "./ClawdPanel";
 import GateButton from "./GateButton";
+
+
+// ── Custom delayed tooltip ────────────────────────────────────────────────────
+// 1200ms delay — 3× the browser default ~400ms
+const TOOLTIP_DELAY = 1200;
+
+function useDelayedTooltip() {
+  const [tooltip, setTooltip] = useState(null); // { text, x, y }
+  const timerRef = useRef(null);
+
+  const show = useCallback((text, e) => {
+    clearTimeout(timerRef.current);
+    if (!text) return;
+    const { clientX, clientY } = e;
+    timerRef.current = setTimeout(() => {
+      setTooltip({ text, x: clientX, y: clientY });
+    }, TOOLTIP_DELAY);
+  }, []);
+
+  const move = useCallback((text, e) => {
+    if (!tooltip) return; // only update position if already shown
+    setTooltip((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : prev);
+  }, [tooltip]);
+
+  const hide = useCallback(() => {
+    clearTimeout(timerRef.current);
+    setTooltip(null);
+  }, []);
+
+  return { tooltip, show, move, hide };
+}
+
+function TooltipBox({ tooltip }) {
+  if (!tooltip) return null;
+  return (
+    <div style={{
+      position: "fixed",
+      left: tooltip.x + 14,
+      top: tooltip.y + 14,
+      maxWidth: "260px",
+      background: "var(--bg-muted)",
+      border: "1px solid var(--border-strong)",
+      borderRadius: "6px",
+      padding: "8px 12px",
+      fontSize: "12px",
+      color: "var(--text)",
+      lineHeight: "1.5",
+      zIndex: 9999,
+      pointerEvents: "none",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+    }}>
+      {tooltip.text}
+    </div>
+  );
+}
 
 const TAB_ORDER = ["Overview", "Activity", "Wallets", "Buyers & Risk", "Discover", "CLAWD", "Tripwire", "About"];
 
@@ -338,76 +393,12 @@ function ProfSignalKey() {
   );
 }
 
-// ── Column-aligned key: uses measured th widths to place pills in a flush row ──
-function ColumnAlignedKey({ columns, tableRef, label }) {
-  const [colWidths, setColWidths] = useState([]);
-  const [open, setOpen] = useState(false);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    function measure() {
-      if (!tableRef.current) return;
-      const ths = tableRef.current.querySelectorAll("thead th");
-      setColWidths(Array.from(ths).map((th) => th.getBoundingClientRect().width));
-    }
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [open, tableRef, columns]);
-
-  return (
-    <details
-      style={{ marginBottom: "0px" }}
-      onToggle={(e) => setOpen(e.target.open)}
-    >
-      <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "14px", color: "var(--text)", padding: "6px 0" }}>
-        {label}
-      </summary>
-      {open && colWidths.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "stretch", marginTop: "8px", marginBottom: "8px", overflowX: "auto" }}>
-          {columns.map((col, i) => {
-            const w = colWidths[i] || 120;
-            return (
-              <div
-                key={col.key}
-                style={{
-                  flexShrink: 0,
-                  width: w,
-                  minWidth: w,
-                  maxWidth: w,
-                  background: col.tooltip ? "var(--bg-muted)" : "transparent",
-                  border: col.tooltip ? "1px solid var(--border)" : "1px solid transparent",
-                  borderRadius: "6px",
-                  padding: col.tooltip ? "8px 10px" : "0",
-                  fontSize: "12px",
-                  boxSizing: "border-box",
-                  marginRight: "0px",
-                }}
-              >
-                {col.tooltip && (
-                  <>
-                    <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: "4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {col.label}
-                    </div>
-                    <div style={{ color: "var(--text-muted)", lineHeight: "1.5", fontSize: "11px" }}>
-                      {col.tooltip}
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </details>
-  );
-}
 
 export default function DashboardTable({ data, discoveryData = [], lastUpdated }) {
   const [activeTab, setActiveTab] = useState("Overview");
   const [sortKey, setSortKey] = useState("Opp");
   const [sortDir, setSortDir] = useState("desc");
-  const tableRef = useRef(null);
+  const { tooltip, show: showTooltip, move: moveTooltip, hide: hideTooltip } = useDelayedTooltip();
 
   const { address } = useAccount();
   const { data: hasAccessRaw } = useReadContract({
@@ -514,14 +505,17 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   }
 
   const tableBody = !isSpecialTab && (
-    <div data-key-container="" style={{ overflowX: "auto" }}>
-      <table ref={tableRef} style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
         <thead>
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
                 onClick={() => handleSort(col.key)}
+                onMouseEnter={col.tooltip ? (e) => showTooltip(col.tooltip, e) : undefined}
+                onMouseMove={col.tooltip ? (e) => moveTooltip(col.tooltip, e) : undefined}
+                onMouseLeave={col.tooltip ? hideTooltip : undefined}
                 style={{
                   textAlign: "left",
                   borderBottom: "1px solid var(--border-strong)",
@@ -603,7 +597,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       </div>
 
       <p style={{ fontSize: "12px", color: "var(--text-xfaint)", marginBottom: "12px" }}>
-        Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs.
+        Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs. Hover any column header for 1–2 seconds to see what it means.
       </p>
 
       {!isSpecialTab && !isDiscover && <SummaryBar data={dataArr} />}
@@ -617,15 +611,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       )}
 
       {activeTab === "Overview" && <ProfSignalKey />}
-      {!isSpecialTab && !isDiscover && (
-        <div style={{ marginTop: activeTab === "Overview" ? "12px" : "0" }}>
-          <ColumnAlignedKey
-            columns={columns}
-            tableRef={tableRef}
-            label="Key: what do these columns mean?"
-          />
-        </div>
-      )}
 
       {isTripwire && <TripwirePanel hasAccess={hasAccess} />}
       {isAbout && <AboutPanel />}
@@ -645,6 +630,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       )}
 
       {isDiscover ? <GatedSection blurred={!hasAccess}>{tableBody}</GatedSection> : tableBody}
+      <TooltipBox tooltip={tooltip} />
     </div>
   );
 }
