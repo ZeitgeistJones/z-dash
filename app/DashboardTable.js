@@ -123,7 +123,6 @@ function ReadBadge({ value }) {
   const colors = READ_TIER_COLORS[tier];
   return (
     <span
-      title={READ_TOOLTIPS[value] || value}
       style={{
         display: "inline-block",
         fontSize: "12px",
@@ -133,7 +132,6 @@ function ReadBadge({ value }) {
         background: colors.bg,
         color: colors.text,
         whiteSpace: "nowrap",
-        cursor: "help",
       }}
     >
       {value}
@@ -516,21 +514,17 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
               <th
                 key={col.key}
                 onClick={() => handleSort(col.key)}
-                title={col.tooltip || ""}
                 style={{
                   textAlign: "left",
                   borderBottom: "1px solid var(--border-strong)",
                   padding: "6px 12px",
-                  cursor: col.tooltip ? "help" : "pointer",
+                  cursor: "pointer",
                   userSelect: "none",
                   whiteSpace: "nowrap",
                 }}
               >
                 {col.label}
                 {sortKey === col.key ? (sortDir === "desc" ? " ▼" : " ▲") : ""}
-                {col.tooltip && (
-                  <span style={{ marginLeft: "3px", fontSize: "10px", color: "var(--text-xfaint)", fontWeight: 400 }}>ⓘ</span>
-                )}
               </th>
             ))}
           </tr>
