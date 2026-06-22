@@ -5,7 +5,7 @@ import { Chart, registerables } from "chart.js";
 Chart.register(...registerables);
 
 const READ_TIER_COLORS = {
-  teal: { bg: "#9FE1CB", text: "#04342C" },
+  teal:  { bg: "#9FE1CB", text: "#04342C" },
   amber: { bg: "#FAC775", text: "#412402" },
   coral: { bg: "#F5C4B3", text: "#4A1B0C" },
 };
@@ -44,11 +44,8 @@ function formatPrice(v) {
   return `$${Number(v).toPrecision(4)}`;
 }
 function formatDateShort(d) {
-  try {
-    return new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  } catch {
-    return String(d);
-  }
+  try { return new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric" }); }
+  catch { return String(d); }
 }
 function formatRowValue(val, format) {
   if (val == null || val === "") return "—";
@@ -62,6 +59,12 @@ function formatRowValue(val, format) {
   return n;
 }
 
+// Read CSS variable from document — fallbacks for SSR
+function cssVar(name, fallback) {
+  if (typeof window === "undefined") return fallback;
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
 function Sparkline({ data, labels, color, formatY }) {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
@@ -69,15 +72,31 @@ function Sparkline({ data, labels, color, formatY }) {
   useEffect(() => {
     if (!canvasRef.current || !data || data.length === 0) return;
     if (chartRef.current) chartRef.current.destroy();
+
+    const gridColor = cssVar("--chart-grid", "rgba(136,135,128,0.15)");
+    const tickColor = cssVar("--chart-tick", "#888");
+
     chartRef.current = new Chart(canvasRef.current, {
       type: "line",
-      data: { labels, datasets: [{ data, borderColor: color, backgroundColor: color, pointRadius: 2.5, borderWidth: 2, tension: 0.25 }] },
+      data: {
+        labels,
+        datasets: [{
+          data, borderColor: color, backgroundColor: color,
+          pointRadius: 2.5, borderWidth: 2, tension: 0.25,
+        }],
+      },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          x: { ticks: { font: { size: 10 }, color: "#888", maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { display: false } },
-          y: { ticks: { font: { size: 10 }, color: "#888", maxTicksLimit: 4, callback: formatY || ((v) => Math.round(v * 10) / 10) }, grid: { color: "rgba(136,135,128,0.15)" } },
+          x: {
+            ticks: { font: { size: 10 }, color: tickColor, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 },
+            grid: { display: false },
+          },
+          y: {
+            ticks: { font: { size: 10 }, color: tickColor, maxTicksLimit: 4, callback: formatY || ((v) => Math.round(v * 10) / 10) },
+            grid: { color: gridColor },
+          },
         },
       },
     });
@@ -85,7 +104,7 @@ function Sparkline({ data, labels, color, formatY }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(data), JSON.stringify(labels), color]);
 
-  if (!data || data.length === 0) return <p style={{ color: "#888", fontSize: "13px" }}>No data yet.</p>;
+  if (!data || data.length === 0) return <p style={{ color: "var(--text-faint)", fontSize: "13px" }}>No data yet.</p>;
   return (
     <div style={{ position: "relative", height: "90px", width: "100%" }}>
       <canvas ref={canvasRef} role="img" aria-label="Trend chart" />
@@ -100,13 +119,11 @@ function MiniSparkline({ data, color }) {
   const max = Math.max(...values);
   const range = max - min || 1;
   const w = 64, h = 22, pad = 2;
-  const points = data
-    .map((v, i) => {
-      const x = pad + (i / (data.length - 1)) * (w - pad * 2);
-      const y = h - pad - ((v - min) / range) * (h - pad * 2);
-      return `${x},${y}`;
-    })
-    .join(" ");
+  const points = data.map((v, i) => {
+    const x = pad + (i / (data.length - 1)) * (w - pad * 2);
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    return `${x},${y}`;
+  }).join(" ");
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: "block", flexShrink: 0 }}>
       <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" />
@@ -116,15 +133,17 @@ function MiniSparkline({ data, color }) {
 
 function MetricCard({ label, sublabel, value, valueColor, rank, totalProjects, data, labels, color, formatY }) {
   return (
-    <div style={{ border: "1px solid #e0e0e0", borderRadius: "8px", overflow: "hidden", background: "#fff" }}>
-      <div style={{ background: "#f3f2ee", padding: "10px 16px" }}>
-        <div style={{ fontWeight: 600, fontSize: "15px" }}>{label}</div>
-        <div style={{ fontSize: "12px", color: "#888" }}>{sublabel}</div>
+    <div style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", background: "var(--card-bg)" }}>
+      <div style={{ background: "var(--card-header-bg)", padding: "10px 16px" }}>
+        <div style={{ fontWeight: 600, fontSize: "15px", color: "var(--text)" }}>{label}</div>
+        <div style={{ fontSize: "12px", color: "var(--text-faint)" }}>{sublabel}</div>
       </div>
       <div style={{ padding: "14px 16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "8px" }}>
           <span style={{ fontSize: "26px", fontWeight: 600, color: valueColor }}>{value ?? "—"}</span>
-          {rank != null && totalProjects != null && <span style={{ fontSize: "12px", color: "#888" }}>Rank #{rank} of {totalProjects}</span>}
+          {rank != null && totalProjects != null && (
+            <span style={{ fontSize: "12px", color: "var(--text-faint)" }}>Rank #{rank} of {totalProjects}</span>
+          )}
         </div>
         <Sparkline data={data} labels={labels} color={color} formatY={formatY} />
       </div>
@@ -134,7 +153,7 @@ function MetricCard({ label, sublabel, value, valueColor, rank, totalProjects, d
 
 function SectionLabel({ children }) {
   return (
-    <p style={{ fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", color: "#999", margin: "0 0 8px" }}>
+    <p style={{ fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-faint)", margin: "0 0 8px" }}>
       {children}
     </p>
   );
@@ -142,10 +161,10 @@ function SectionLabel({ children }) {
 
 function CompactRow({ label, value, rank, totalProjects, lowerBetter, data, color }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "7px 0", borderTop: "1px solid #eee" }}>
-      <span style={{ width: 124, fontSize: 12, color: "#555", flexShrink: 0 }}>{label}</span>
-      <span style={{ width: 64, fontSize: 13, fontWeight: 600, flexShrink: 0 }}>{value}</span>
-      <span style={{ width: 110, fontSize: 11, color: "#999", flexShrink: 0 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "7px 0", borderTop: "1px solid var(--border)" }}>
+      <span style={{ width: 124, fontSize: 12, color: "var(--text-muted)", flexShrink: 0 }}>{label}</span>
+      <span style={{ width: 64, fontSize: 13, fontWeight: 600, flexShrink: 0, color: "var(--text)" }}>{value}</span>
+      <span style={{ width: 110, fontSize: 11, color: "var(--text-faint)", flexShrink: 0 }}>
         {rank != null && totalProjects != null ? `#${rank} of ${totalProjects}` : "—"}
         {lowerBetter && <span style={{ display: "block" }}>(lower better)</span>}
       </span>
@@ -156,8 +175,7 @@ function CompactRow({ label, value, rank, totalProjects, lowerBetter, data, colo
 
 const COMPACT_SECTIONS = [
   {
-    title: "Growth rates",
-    color: "#185FA5",
+    title: "Growth rates", color: "#185FA5",
     rows: [
       { key: "Vol Grw %", label: "Vol Grw %", format: "pct1" },
       { key: "Tx Grw %", label: "Tx Grw %", format: "pct1" },
@@ -165,8 +183,7 @@ const COMPACT_SECTIONS = [
     ],
   },
   {
-    title: "Raw activity",
-    color: "#D85A30",
+    title: "Raw activity", color: "#D85A30",
     rows: [
       { key: "Txs 30d", label: "Txs 30d", format: "int" },
       { key: "Vol 30d", label: "Vol 30d", format: "usd" },
@@ -175,8 +192,7 @@ const COMPACT_SECTIONS = [
     ],
   },
   {
-    title: "New, returning & retention",
-    color: "#3B6D11",
+    title: "New, returning & retention", color: "#3B6D11",
     rows: [
       { key: "Retention %", label: "Retention %", format: "pct1" },
       { key: "New %", label: "New %", format: "pct1" },
@@ -186,8 +202,7 @@ const COMPACT_SECTIONS = [
     ],
   },
   {
-    title: "Buyers & sellers",
-    color: "#534AB7",
+    title: "Buyers & sellers", color: "#534AB7",
     rows: [
       { key: "Buyers 30d", label: "Buyers 30d", format: "int" },
       { key: "Buyers 7d", label: "Buyers 7d", format: "int" },
@@ -198,8 +213,7 @@ const COMPACT_SECTIONS = [
     ],
   },
   {
-    title: "Quality & risk",
-    color: "#993556",
+    title: "Quality & risk", color: "#993556",
     rows: [
       { key: "Qlty %", label: "Qlty %", format: "pct1" },
       { key: "Risk %", label: "Risk %", format: "pct1", lowerBetter: true },
@@ -214,17 +228,27 @@ function ProfileSignalBanner({ profile, signal, read }) {
   const readColor = readTier ? READ_TIER_COLORS[readTier] : null;
   const explanation = COMBO_EXPLANATIONS[`${profile}|${signal}`] || "Explanation not available for this combination.";
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", background: "#f7f7f5", border: "1px solid #e0e0e0", borderRadius: "8px", padding: "16px 20px", marginBottom: "20px", flexWrap: "wrap" }}>
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px",
+      background: "var(--bg-subtle)", border: "1px solid var(--border)",
+      borderRadius: "8px", padding: "16px 20px", marginBottom: "20px", flexWrap: "wrap",
+    }}>
       <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
         {read && (
           <span style={{ fontSize: "16px", padding: "6px 14px", borderRadius: "6px", background: readColor.bg, color: readColor.text, fontWeight: 700 }}>
             Read: {read}
           </span>
         )}
-        <span style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "6px", background: "#eceae3", color: "#000", fontWeight: 500 }}>Profile: {profile ?? "—"}</span>
-        <span style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "6px", background: "#eceae3", color: "#000", fontWeight: 500 }}>Signal: {signal ?? "—"}</span>
+        <span style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "6px", background: "var(--badge-neutral-bg)", color: "var(--badge-neutral-text)", fontWeight: 500 }}>
+          Profile: {profile ?? "—"}
+        </span>
+        <span style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "6px", background: "var(--badge-neutral-bg)", color: "var(--badge-neutral-text)", fontWeight: 500 }}>
+          Signal: {signal ?? "—"}
+        </span>
       </div>
-      <p style={{ fontSize: "13px", color: "#555", margin: 0, maxWidth: "420px", textAlign: "right" }}>{explanation}</p>
+      <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0, maxWidth: "420px", textAlign: "right" }}>
+        {explanation}
+      </p>
     </div>
   );
 }
@@ -242,19 +266,12 @@ export default function ClawdPanel({ clawdRow, totalProjects, opportunityRank, m
         const res = await fetch("/api/clawd-history");
         const json = await res.json();
         if (cancelled) return;
-        if (json.error) {
-          setErrorMsg(json.error);
-          setStatus("error");
-          return;
-        }
+        if (json.error) { setErrorMsg(json.error); setStatus("error"); return; }
         setBehavioralHistory(json.behavioralHistory || []);
         setPriceHistory(json.priceHistory || { prices: [], market_caps: [] });
         setStatus("done");
       } catch (err) {
-        if (!cancelled) {
-          setErrorMsg(String(err));
-          setStatus("error");
-        }
+        if (!cancelled) { setErrorMsg(String(err)); setStatus("error"); }
       }
     }
     load();
@@ -267,23 +284,23 @@ export default function ClawdPanel({ clawdRow, totalProjects, opportunityRank, m
     return rawPairs.filter((_, i) => i % step === 0).map(([ts, val]) => ({ x: formatDateShort(ts), y: val }));
   }
 
-  const weekLabels = behavioralHistory.map((r) => formatDateShort(r["Snapshot Date"]));
-  const oppData = behavioralHistory.map((r) => Number(r["Opp"]));
-  const momData = behavioralHistory.map((r) => Number(r["Mom"]));
-  const susData = behavioralHistory.map((r) => Number(r["Sus"]));
+  const weekLabels  = behavioralHistory.map((r) => formatDateShort(r["Snapshot Date"]));
+  const oppData     = behavioralHistory.map((r) => Number(r["Opp"]));
+  const momData     = behavioralHistory.map((r) => Number(r["Mom"]));
+  const susData     = behavioralHistory.map((r) => Number(r["Sus"]));
   const walletsData = behavioralHistory.map((r) => Number(r["Wallets 30d"]));
   const mcapThinned = thinSeries(priceHistory.market_caps);
   const priceThinned = thinSeries(priceHistory.prices);
 
   return (
     <div>
-      <h2 style={{ marginTop: 0 }}>CLAWD — Health Check</h2>
+      <h2 style={{ marginTop: 0, color: "var(--text)" }}>CLAWD — Health Check</h2>
 
       <ProfileSignalBanner profile={clawdRow?.["Prof"]} signal={clawdRow?.signal} read={clawdRow?.read} />
 
-      {status === "loading" && <p style={{ color: "#666" }}>Loading history…</p>}
-      {status === "error" && <p style={{ color: "#c0392b" }}>Couldn't load history: {errorMsg}</p>}
-      {priceHistory.error && <p style={{ fontSize: "12px", color: "#c0392b", marginBottom: "8px" }}>Price/market cap history failed to load: {priceHistory.error}</p>}
+      {status === "loading" && <p style={{ color: "var(--text-muted)" }}>Loading history…</p>}
+      {status === "error"   && <p style={{ color: "#c0392b" }}>Couldn't load history: {errorMsg}</p>}
+      {priceHistory.error   && <p style={{ fontSize: "12px", color: "#c0392b", marginBottom: "8px" }}>Price/market cap history failed to load: {priceHistory.error}</p>}
 
       {status === "done" && (
         <>
@@ -304,16 +321,11 @@ export default function ClawdPanel({ clawdRow, totalProjects, opportunityRank, m
           <SectionLabel>Full breakdown</SectionLabel>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "16px" }}>
             {COMPACT_SECTIONS.map((section, idx) => (
-              <div
-                key={section.title}
-                style={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px",
-                  background: "#fff",
-                  padding: "10px 16px",
-                  gridColumn: idx === COMPACT_SECTIONS.length - 1 ? "span 2" : undefined,
-                }}
-              >
+              <div key={section.title} style={{
+                border: "1px solid var(--border)", borderRadius: "8px",
+                background: "var(--card-bg)", padding: "10px 16px",
+                gridColumn: idx === COMPACT_SECTIONS.length - 1 ? "span 2" : undefined,
+              }}>
                 <p style={{ fontSize: "13px", fontWeight: 600, margin: "0 0 4px", color: section.color }}>{section.title}</p>
                 {section.rows.map((row) => (
                   <CompactRow
@@ -333,7 +345,7 @@ export default function ClawdPanel({ clawdRow, totalProjects, opportunityRank, m
         </>
       )}
 
-      <p style={{ fontSize: "12px", color: "#999", marginTop: "20px" }}>
+      <p style={{ fontSize: "12px", color: "var(--text-faint)", marginTop: "20px" }}>
         Behavioral history is a true backtest — recomputed from on-chain activity as of each past date,
         including full cohort context, not just CLAWD in isolation. Refreshed roughly weekly, not live.
         Price/Market Cap history comes from CoinGecko.
