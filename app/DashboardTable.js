@@ -25,6 +25,7 @@ const GATE_ABI = [
 
 const FREE_ROW_COUNT = 5;
 
+// Task 1 — tooltip field added to every column definition
 const TABS = {
   Overview: [
     { key: "Project", label: "Project", type: "string" },
@@ -126,9 +127,9 @@ const READ_TIERS = {
 };
 
 const READ_TIER_COLORS = {
-  teal: { bg: "#E1F5EE", text: "#085041" },
-  amber: { bg: "#FAEEDA", text: "#633806" },
-  coral: { bg: "#FAECE7", text: "#712B13" },
+  teal: { bg: "var(--read-teal-bg)", text: "var(--read-teal-text)" },
+  amber: { bg: "var(--read-amber-bg)", text: "var(--read-amber-text)" },
+  coral: { bg: "var(--read-coral-bg)", text: "var(--read-coral-text)" },
 };
 
 function ReadBadge({ value }) {
@@ -184,11 +185,11 @@ function GatedSection({ blurred, children }) {
           style={{
             fontSize: "14px",
             fontWeight: 600,
-            color: "#333",
-            background: "#fff",
+            color: "var(--text)",
+            background: "var(--bg)",
             padding: "12px 20px",
             borderRadius: "8px",
-            border: "1px solid #e0e0e0",
+            border: "1px solid var(--border)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           }}
         >
@@ -220,13 +221,13 @@ function StatusBanner({ lastUpdated }) {
   return (
     <div
       style={{
-        background: "#f7f7f5",
-        border: "1px solid #e0e0e0",
+        background: "var(--bg-subtle)",
+        border: "1px solid var(--border)",
         borderRadius: "8px",
         padding: "12px 16px",
         marginBottom: "16px",
         fontSize: "13px",
-        color: "#555",
+        color: "var(--text-muted)",
         lineHeight: "1.5",
       }}
     >
@@ -257,16 +258,16 @@ function SummaryBar({ data }) {
         display: "inline-flex",
         alignItems: "center",
         gap: "6px",
-        background: "#f3f2ee",
-        border: "1px solid #e0e0e0",
+        background: "var(--bg-muted)",
+        border: "1px solid var(--border)",
         borderRadius: "6px",
         padding: "5px 12px",
         fontSize: "13px",
-        color: "#444",
+        color: "var(--text)",
       }}
     >
-      <span style={{ color: "#888", fontWeight: 400 }}>{label}</span>
-      <span style={{ fontWeight: 700, color: "#222" }}>{value}</span>
+      <span style={{ color: "var(--text-faint)", fontWeight: 400 }}>{label}</span>
+      <span style={{ fontWeight: 700, color: "var(--pill-value)" }}>{value}</span>
     </span>
   );
 
@@ -280,10 +281,53 @@ function SummaryBar({ data }) {
   );
 }
 
+// Task 6 — Tag filter buttons
+function TagFilterBar({ tagFilter, setTagFilter }) {
+  const filters = [
+    { key: "all", label: "All" },
+    { key: "agents", label: "Agents" },
+    { key: "non-agents", label: "Non-Agents" },
+    { key: "other", label: "Other" },
+  ];
+
+  return (
+    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "12px", alignItems: "center" }}>
+      <span style={{ fontSize: "12px", color: "var(--text-faint)", marginRight: "2px" }}>Filter:</span>
+      {filters.map((f) => (
+        <button
+          key={f.key}
+          onClick={() => setTagFilter(f.key)}
+          style={{
+            padding: "4px 12px",
+            borderRadius: "6px",
+            border: tagFilter === f.key ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
+            background: tagFilter === f.key ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
+            color: tagFilter === f.key ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
+            cursor: "pointer",
+            fontWeight: tagFilter === f.key ? 600 : 400,
+            fontSize: "12px",
+          }}
+        >
+          {f.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function matchesTagFilter(row, tagFilter) {
+  if (tagFilter === "all") return true;
+  const tag = row.Tag || row.tag || "";
+  if (tagFilter === "agents") return tag.startsWith("agent-") || tag === "clanker-via-bankrbot-prefork";
+  if (tagFilter === "non-agents") return tag.startsWith("non-agent-");
+  if (tagFilter === "other") return tag === "neither";
+  return true;
+}
+
 function ProfSignalKey() {
   return (
-    <details style={{ marginBottom: "16px", fontSize: "14px", color: "#444" }}>
-      <summary style={{ cursor: "pointer", fontWeight: 600, color: "#333" }}>
+    <details style={{ marginBottom: "16px", fontSize: "14px", color: "var(--text)" }}>
+      <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text)" }}>
         Key: what do Prof + Signal + Read mean?
       </summary>
       <div style={{ marginTop: "10px", lineHeight: "1.6" }}>
@@ -297,80 +341,40 @@ function ProfSignalKey() {
           <strong>Breakout</strong> (strong momentum + strong sustainability)
         </p>
         <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Confirmed Growth</strong> — <ReadBadge value="Beacon" /> — strongest combo on the board:
-            real usage growing, price agrees.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Absorbed</strong> — <ReadBadge value="Undercurrent" /> — strong fundamentals, but volume
-            isn't moving price yet.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Thin Rally</strong> — <ReadBadge value="Overshoot" /> — strong fundamentals, price up on
-            light volume.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Cooling</strong> — <ReadBadge value="Quiet Beacon" /> — strong fundamentals, market hasn't
-            noticed yet.
-          </li>
+          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Beacon" /> — strongest combo on the board: real usage growing, price agrees.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Undercurrent" /> — strong fundamentals, but volume isn't moving price yet.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="Overshoot" /> — strong fundamentals, price up on light volume.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Quiet Beacon" /> — strong fundamentals, market hasn't noticed yet.</li>
         </ul>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Quick Mover</strong> (strong momentum, weak sustainability)
         </p>
         <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Confirmed Growth</strong> — <ReadBadge value="Flare" /> — hot right now, durability
-            unproven.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Absorbed</strong> — <ReadBadge value="Backdraft" /> — fast activity, price not rewarding it.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Thin Rally</strong> — <ReadBadge value="Flashpoint" /> — classic pump pattern.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Cooling</strong> — <ReadBadge value="Afterglow" /> — momentum likely fading.
-          </li>
+          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Flare" /> — hot right now, durability unproven.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Backdraft" /> — fast activity, price not rewarding it.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="Flashpoint" /> — classic pump pattern.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Afterglow" /> — momentum likely fading.</li>
         </ul>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Slow Burner</strong> (weak momentum, strong sustainability)
         </p>
         <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Confirmed Growth</strong> — <ReadBadge value="Low Hum" /> — steady, sticky usage finally
-            agreeing with price.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Absorbed</strong> — <ReadBadge value="Low Signal" /> — durable usage, possibly undervalued.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Thin Rally</strong> — <ReadBadge value="Soft Ping" /> — modest, low-risk price tick.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Cooling</strong> — <ReadBadge value="Standby" /> — stable but quiet.
-          </li>
+          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Low Hum" /> — steady, sticky usage finally agreeing with price.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Low Signal" /> — durable usage, possibly undervalued.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="Soft Ping" /> — modest, low-risk price tick.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Standby" /> — stable but quiet.</li>
         </ul>
 
         <p style={{ marginTop: "12px", marginBottom: "4px" }}>
           <strong>Cold</strong> (weak momentum + weak sustainability)
         </p>
         <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Confirmed Growth</strong> — <ReadBadge value="Mirage" /> — rising despite weak fundamentals,
-            possibly hype-driven.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Absorbed</strong> — <ReadBadge value="Bleed" /> — weak fundamentals, falling price, worth
-            caution.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Thin Rally</strong> — <ReadBadge value="False Flare" /> — weakest, highest-risk combo.
-          </li>
-          <li style={{ marginBottom: "4px" }}>
-            <strong>Cooling</strong> — <ReadBadge value="Flatline" /> — weak across the board.
-          </li>
+          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Mirage" /> — rising despite weak fundamentals, possibly hype-driven.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Bleed" /> — weak fundamentals, falling price, worth caution.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="False Flare" /> — weakest, highest-risk combo.</li>
+          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Flatline" /> — weak across the board.</li>
         </ul>
       </div>
     </details>
@@ -381,6 +385,8 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const [activeTab, setActiveTab] = useState("Overview");
   const [sortKey, setSortKey] = useState("Opp");
   const [sortDir, setSortDir] = useState("desc");
+  // Task 6 — tag filter state
+  const [tagFilter, setTagFilter] = useState("all");
 
   const { address } = useAccount();
   const { data: hasAccessRaw } = useReadContract({
@@ -398,6 +404,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const isClawd = activeTab === "CLAWD";
   const isDiscover = activeTab === "Discover";
   const isSpecialTab = isTripwire || isAbout || isClawd;
+  const isDataTab = !isSpecialTab && !isDiscover;
   const columns = isSpecialTab ? [] : TABS[activeTab];
   const rawSource = isDiscover ? discoveryData : data;
   const sourceData = isSpecialTab ? [] : Array.isArray(rawSource) ? rawSource : [];
@@ -438,6 +445,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
 
   function handleTabChange(tab) {
     setActiveTab(tab);
+    setTagFilter("all"); // reset filter on tab change
     if (tab === "Tripwire" || tab === "About" || tab === "CLAWD") return;
     const firstNumeric = TABS[tab]?.find((c) => c.type === "number");
     setSortKey(firstNumeric ? firstNumeric.key : TABS[tab]?.[0]?.key);
@@ -468,9 +476,14 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     }
   }
 
+  // Task 6 — apply tag filter before sort (data tabs only)
+  const filteredSource = isDataTab
+    ? sourceData.filter((row) => matchesTagFilter(row, tagFilter))
+    : sourceData;
+
   const sorted = isSpecialTab
     ? []
-    : [...sourceData].sort((a, b) => {
+    : [...filteredSource].sort((a, b) => {
         const col = columns.find((c) => c.key === sortKey) || columns[0];
         let aVal = a[sortKey];
         let bVal = b[sortKey];
@@ -509,7 +522,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
                 title={col.tooltip || ""}
                 style={{
                   textAlign: "left",
-                  borderBottom: "1px solid #ccc",
+                  borderBottom: "1px solid var(--border-strong)",
                   padding: "6px 12px",
                   cursor: col.tooltip ? "help" : "pointer",
                   userSelect: "none",
@@ -519,7 +532,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
                 {col.label}
                 {sortKey === col.key ? (sortDir === "desc" ? " ▼" : " ▲") : ""}
                 {col.tooltip && (
-                  <span style={{ marginLeft: "3px", fontSize: "10px", color: "#bbb", fontWeight: 400 }}>ⓘ</span>
+                  <span style={{ marginLeft: "3px", fontSize: "10px", color: "var(--text-xfaint)", fontWeight: 400 }}>ⓘ</span>
                 )}
               </th>
             ))}
@@ -528,7 +541,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         <tbody>
           {sorted.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} style={{ padding: "16px", color: "#666" }}>
+              <td colSpan={columns.length} style={{ padding: "16px", color: "var(--text-muted)" }}>
                 {isDiscover ? "No new candidates found." : "No data."}
               </td>
             </tr>
@@ -536,13 +549,13 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
             sorted.map((d, idx) => {
               const isRowGated = !isDiscover && idx >= FREE_ROW_COUNT && !hasAccess;
               // Task 4 — CLAWD row highlight
-              const isClawd = !isDiscover && d["Project"] === "CLAWD";
+              const isClawdRow = !isDiscover && d["Project"] === "CLAWD";
               return (
                 <tr
                   key={d[rowKeyField]}
                   style={
-                    isClawd
-                      ? { borderLeft: "3px solid #3B6D11", background: "rgba(59,109,17,0.05)" }
+                    isClawdRow
+                      ? { borderLeft: "3px solid var(--clawd-row-border)", background: "var(--clawd-row-bg)" }
                       : {}
                   }
                 >
@@ -584,9 +597,9 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
             style={{
               padding: "8px 16px",
               borderRadius: "6px",
-              border: activeTab === tab ? "1px solid #333" : "1px solid #ccc",
-              background: activeTab === tab ? "#333" : "#fff",
-              color: activeTab === tab ? "#fff" : "#333",
+              border: activeTab === tab ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
+              background: activeTab === tab ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
+              color: activeTab === tab ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
               cursor: "pointer",
               fontWeight: activeTab === tab ? 600 : 400,
             }}
@@ -596,15 +609,18 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         ))}
       </div>
 
-      <p style={{ fontSize: "12px", color: "#aaa", marginBottom: "12px" }}>
+      <p style={{ fontSize: "12px", color: "var(--text-xfaint)", marginBottom: "12px" }}>
         Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs.
       </p>
 
-      {/* Task 3 — Summary stats bar (shown on data tabs only) */}
-      {!isSpecialTab && !isDiscover && <SummaryBar data={dataArr} />}
+      {/* Task 3 — Summary stats bar (data tabs only) */}
+      {isDataTab && <SummaryBar data={dataArr} />}
+
+      {/* Task 6 — Tag filter (data tabs only) */}
+      {isDataTab && <TagFilterBar tagFilter={tagFilter} setTagFilter={setTagFilter} />}
 
       {isDiscover && (
-        <p style={{ color: "#666", marginBottom: "12px", fontSize: "14px" }}>
+        <p style={{ color: "var(--text-muted)", marginBottom: "12px", fontSize: "14px" }}>
           AI-category coins from CoinGecko (AI Agents, AI Agent Launchpad, AI Framework, DeFAI) with a Base
           contract address, not yet in your tracked list. Verify each before adding — category tagging on
           CoinGecko isn't perfect either.
