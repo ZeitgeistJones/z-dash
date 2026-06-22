@@ -29,53 +29,53 @@ const TABS = {
   Overview: [
     { key: "Project", label: "Project", type: "string" },
     { key: "read", label: "Read", type: "string" },
-    { key: "Opp", label: "Opp", type: "number" },
-    { key: "Mom", label: "Mom", type: "number" },
-    { key: "Sus", label: "Sus", type: "number" },
+    { key: "Opp", label: "Opp", type: "number", format: "dec1" },
+    { key: "Mom", label: "Mom", type: "number", format: "dec1" },
+    { key: "Sus", label: "Sus", type: "number", format: "dec1" },
     { key: "Prof", label: "Prof", type: "string" },
     { key: "priceUsd", label: "Price", type: "number", format: "price" },
     { key: "marketCapUsd", label: "Market Cap", type: "number", format: "usd" },
     { key: "signal", label: "Signal", type: "string" },
-    { key: "signalScore", label: "Signal Score", type: "number" },
+    { key: "signalScore", label: "Signal Score", type: "number", format: "dec1" },
   ],
   Activity: [
     { key: "Project", label: "Project", type: "string" },
     { key: "marketCapUsd", label: "Market Cap", type: "number", format: "usd" },
     { key: "Vol 30d", label: "Vol 30d", type: "number", format: "usd" },
-    { key: "Vol/Tx", label: "Vol/Tx", type: "number" },
-    { key: "Vol/Wlt", label: "Vol/Wlt", type: "number" },
-    { key: "Vol Grw %", label: "Vol Grw %", type: "number" },
-    { key: "Txs 30d", label: "Txs 30d", type: "number" },
-    { key: "Txs 7d", label: "Txs 7d", type: "number" },
-    { key: "Tx Grw %", label: "Tx Grw %", type: "number" },
-    { key: "Txs/User", label: "Txs/User", type: "number" },
+    { key: "Vol/Tx", label: "Vol/Tx", type: "number", format: "dec2" },
+    { key: "Vol/Wlt", label: "Vol/Wlt", type: "number", format: "dec2" },
+    { key: "Vol Grw %", label: "Vol Grw %", type: "number", format: "pct1" },
+    { key: "Txs 30d", label: "Txs 30d", type: "number", format: "int" },
+    { key: "Txs 7d", label: "Txs 7d", type: "number", format: "int" },
+    { key: "Tx Grw %", label: "Tx Grw %", type: "number", format: "pct1" },
+    { key: "Txs/User", label: "Txs/User", type: "number", format: "dec1" },
   ],
   Wallets: [
     { key: "Project", label: "Project", type: "string" },
     { key: "marketCapUsd", label: "Market Cap", type: "number", format: "usd" },
-    { key: "Wallets 30d", label: "Wallets 30d", type: "number" },
-    { key: "Wallets 7d", label: "Wallets 7d", type: "number" },
-    { key: "User Grw %", label: "User Grw %", type: "number" },
-    { key: "New Wallets", label: "New Wallets", type: "number" },
-    { key: "Returning Wallets", label: "Returning Wallets", type: "number" },
-    { key: "New %", label: "New %", type: "number" },
-    { key: "Retention %", label: "Retention %", type: "number" },
-    { key: "Avg Txs Ret", label: "Avg Txs Ret", type: "number" },
+    { key: "Wallets 30d", label: "Wallets 30d", type: "number", format: "int" },
+    { key: "Wallets 7d", label: "Wallets 7d", type: "number", format: "int" },
+    { key: "User Grw %", label: "User Grw %", type: "number", format: "pct1" },
+    { key: "New Wallets", label: "New Wallets", type: "number", format: "int" },
+    { key: "Returning Wallets", label: "Returning Wallets", type: "number", format: "int" },
+    { key: "New %", label: "New %", type: "number", format: "pct1" },
+    { key: "Retention %", label: "Retention %", type: "number", format: "pct1" },
+    { key: "Avg Txs Ret", label: "Avg Txs Ret", type: "number", format: "dec1" },
   ],
   "Buyers & Risk": [
     { key: "Project", label: "Project", type: "string" },
     { key: "marketCapUsd", label: "Market Cap", type: "number", format: "usd" },
-    { key: "Qlty %", label: "Qlty %", type: "number" },
-    { key: "Traders", label: "Traders", type: "number" },
-    { key: "Buyers 30d", label: "Buyers 30d", type: "number" },
-    { key: "Buyers 7d", label: "Buyers 7d", type: "number" },
-    { key: "1st Buyers 30d", label: "1st Buyers 30d", type: "number" },
-    { key: "1st Buyers 7d", label: "1st Buyers 7d", type: "number" },
-    { key: "1st Sellers 30d", label: "1st Sellers 30d", type: "number" },
-    { key: "1st Sellers 7d", label: "1st Sellers 7d", type: "number" },
-    { key: "Non-Trade New 30d", label: "Non-Trade New", type: "number" },
-    { key: "Top10 %", label: "Top10 %", type: "number" },
-    { key: "Risk %", label: "Risk %", type: "number" },
+    { key: "Qlty %", label: "Qlty %", type: "number", format: "pct1" },
+    { key: "Traders", label: "Traders", type: "number", format: "int" },
+    { key: "Buyers 30d", label: "Buyers 30d", type: "number", format: "int" },
+    { key: "Buyers 7d", label: "Buyers 7d", type: "number", format: "int" },
+    { key: "1st Buyers 30d", label: "1st Buyers 30d", type: "number", format: "int" },
+    { key: "1st Buyers 7d", label: "1st Buyers 7d", type: "number", format: "int" },
+    { key: "1st Sellers 30d", label: "1st Sellers 30d", type: "number", format: "int" },
+    { key: "1st Sellers 7d", label: "1st Sellers 7d", type: "number", format: "int" },
+    { key: "Non-Trade New 30d", label: "Non-Trade New", type: "number", format: "int" },
+    { key: "Top10 %", label: "Top10 %", type: "number", format: "pct1" },
+    { key: "Risk %", label: "Risk %", type: "number", format: "pct1" },
   ],
   Discover: [
     { key: "name", label: "Project", type: "string" },
@@ -179,8 +179,14 @@ function GatedSection({ blurred, children }) {
 
 function formatValue(val, format) {
   if (val == null || val === "") return "—";
-  if (format === "price") return `$${Number(val).toPrecision(4)}`;
-  if (format === "usd") return `$${Number(val).toLocaleString()}`;
+  const n = Number(val);
+  if (Number.isNaN(n)) return "—";
+  if (format === "price") return `$${n.toPrecision(4)}`;
+  if (format === "usd") return `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  if (format === "pct1") return `${n.toFixed(1)}%`;
+  if (format === "int") return Math.round(n).toLocaleString();
+  if (format === "dec1") return n.toFixed(1);
+  if (format === "dec2") return n.toFixed(2);
   return val;
 }
 
