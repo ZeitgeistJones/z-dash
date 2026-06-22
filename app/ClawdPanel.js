@@ -180,8 +180,8 @@ const COMPACT_SECTIONS = [
     rows: [
       { key: "Retention %", label: "Retention %", format: "pct1" },
       { key: "New %", label: "New %", format: "pct1" },
-      { key: "New 30d", label: "New 30d", format: "int" },
-      { key: "Return 30d", label: "Return 30d", format: "int" },
+      { key: "New Wallets", label: "New Wallets", format: "int" },
+      { key: "Returning Wallets", label: "Returning Wallets", format: "int" },
       { key: "Non-Trade New 30d", label: "Non-Trade New", format: "int" },
     ],
   },
