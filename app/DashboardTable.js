@@ -9,26 +9,25 @@ import GateButton from "./GateButton";
 
 
 // ── Custom delayed tooltip ────────────────────────────────────────────────────
-// 1200ms delay — 3× the browser default ~400ms
-const TOOLTIP_DELAY = 1200;
+const HEADER_TOOLTIP_DELAY = 1200; // column header definitions
+const CELL_TOOLTIP_DELAY   = 3000; // cell rank on hover
 
 function useDelayedTooltip() {
-  const [tooltip, setTooltip] = useState(null); // { text, x, y }
+  const [tooltip, setTooltip] = useState(null); // { content, x, y }
   const timerRef = useRef(null);
 
-  const show = useCallback((text, e) => {
+  const show = useCallback((content, e, delay = HEADER_TOOLTIP_DELAY) => {
     clearTimeout(timerRef.current);
-    if (!text) return;
+    if (!content) return;
     const { clientX, clientY } = e;
     timerRef.current = setTimeout(() => {
-      setTooltip({ text, x: clientX, y: clientY });
-    }, TOOLTIP_DELAY);
+      setTooltip({ content, x: clientX, y: clientY });
+    }, delay);
   }, []);
 
-  const move = useCallback((text, e) => {
-    if (!tooltip) return; // only update position if already shown
+  const move = useCallback((e) => {
     setTooltip((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : prev);
-  }, [tooltip]);
+  }, []);
 
   const hide = useCallback(() => {
     clearTimeout(timerRef.current);
@@ -40,12 +39,13 @@ function useDelayedTooltip() {
 
 function TooltipBox({ tooltip }) {
   if (!tooltip) return null;
+  const { content, x, y } = tooltip;
   return (
     <div style={{
       position: "fixed",
-      left: tooltip.x + 14,
-      top: tooltip.y + 14,
-      maxWidth: "260px",
+      left: x + 14,
+      top: y + 14,
+      maxWidth: "280px",
       background: "var(--bg-muted)",
       border: "1px solid var(--border-strong)",
       borderRadius: "6px",
@@ -57,9 +57,19 @@ function TooltipBox({ tooltip }) {
       pointerEvents: "none",
       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
     }}>
-      {tooltip.text}
+      {typeof content === "string" ? content : content}
     </div>
   );
+}
+
+// ── Pin state helpers ─────────────────────────────────────────────────────────
+function loadPins() {
+  try { return JSON.parse(localStorage.getItem("zdash-pins") || "[]"); }
+  catch { return []; }
+}
+function savePins(pins) {
+  try { localStorage.setItem("zdash-pins", JSON.stringify(pins)); }
+  catch {}
 }
 
 const TAB_ORDER = ["Overview", "Activity", "Wallets", "Buyers & Risk", "Discover", "CLAWD", "Tripwire", "About"];
@@ -398,7 +408,13 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const [activeTab, setActiveTab] = useState("Overview");
   const [sortKey, setSortKey] = useState("Opp");
   const [sortDir, setSortDir] = useState("desc");
+  const [pinnedKeys, setPinnedKeys] = useState([]);
+  const [dragOver, setDragOver] = useState(null); // key being dragged over
+  const dragKeyRef = useRef(null); // key being dragged
   const { tooltip, show: showTooltip, move: moveTooltip, hide: hideTooltip } = useDelayedTooltip();
+
+  // Load pins from localStorage on mount
+  useEffect(() => { setPinnedKeys(loadPins()); }, []);
 
   const { address } = useAccount();
   const { data: hasAccessRaw } = useReadContract({
@@ -448,6 +464,53 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const LOWER_IS_BETTER = new Set(["Risk %", "Top10 %"]);
   const ranks = {};
   RANK_FIELDS.forEach((f) => { ranks[f] = rankBy(f, LOWER_IS_BETTER.has(f)); });
+
+  // ── Pin helpers ───────────────────────────────────────────────────────────
+  function togglePin(key) {
+    setPinnedKeys((prev) => {
+      const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
+      savePins(next);
+      return next;
+    });
+  }
+
+  function handleDragStart(key) { dragKeyRef.current = key; }
+  function handleDragEnter(key) { setDragOver(key); }
+  function handleDragEnd() {
+    const from = dragKeyRef.current;
+    const to = dragOver;
+    dragKeyRef.current = null;
+    setDragOver(null);
+    if (!from || !to || from === to) return;
+    setPinnedKeys((prev) => {
+      const next = [...prev];
+      const fi = next.indexOf(from);
+      const ti = next.indexOf(to);
+      if (fi === -1 || ti === -1) return prev;
+      next.splice(fi, 1);
+      next.splice(ti, 0, from);
+      savePins(next);
+      return next;
+    });
+  }
+
+  // ── Per-cell rank computation ─────────────────────────────────────────────
+  // Returns "rank / total" string for a numeric cell value within the full dataset
+  function getCellRank(colKey, colType, rowData) {
+    if (colType !== "number" || isDiscover) return null;
+    const val = rowData[colKey];
+    if (val == null || val === "" || Number.isNaN(Number(val))) return null;
+    const lowerBetter = new Set(["Risk %", "Top10 %"]);
+    // Sort descending by default (higher = better = rank 1), ascending for lower-is-better
+    const asc = lowerBetter.has(colKey);
+    const all = dataArr
+      .map((d) => Number(d[colKey]))
+      .filter((v) => !Number.isNaN(v) && v != null);
+    if (all.length === 0) return null;
+    const sorted = [...all].sort((a, b) => asc ? a - b : b - a);
+    const rank = sorted.indexOf(Number(val)) + 1;
+    return { rank, total: sorted.length };
+  }
 
   function handleTabChange(tab) {
     setActiveTab(tab);
@@ -504,17 +567,111 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     return tab;
   }
 
+  // Split sorted into pinned-first, then rest
+  const pinnedRows = !isDiscover
+    ? pinnedKeys.map((k) => sorted.find((d) => d[rowKeyField] === k)).filter(Boolean)
+    : [];
+  const unpinnedRows = !isDiscover
+    ? sorted.filter((d) => !pinnedKeys.includes(d[rowKeyField]))
+    : sorted;
+  const displayRows = [...pinnedRows, ...unpinnedRows];
+
+  function renderRow(d, idx) {
+    const isPinned   = !isDiscover && pinnedKeys.includes(d[rowKeyField]);
+    const unpinnedIdx = idx - pinnedRows.length;
+    const isRowGated = !isDiscover && !isPinned && unpinnedIdx >= FREE_ROW_COUNT && !hasAccess;
+    const isClawdRow = !isDiscover && d["Project"] === "CLAWD";
+    const isDragTarget = dragOver === d[rowKeyField] && isPinned;
+
+    return (
+      <tr
+        key={d[rowKeyField]}
+        draggable={isPinned}
+        onDragStart={isPinned ? () => handleDragStart(d[rowKeyField]) : undefined}
+        onDragEnter={isPinned ? () => handleDragEnter(d[rowKeyField]) : undefined}
+        onDragEnd={isPinned ? handleDragEnd : undefined}
+        onDragOver={isPinned ? (e) => e.preventDefault() : undefined}
+        style={{
+          ...(isClawdRow ? { borderLeft: "3px solid #3B6D11", background: "var(--clawd-row-bg)" } : {}),
+          ...(isPinned ? { background: isDragTarget ? "var(--bg-subtle)" : "rgba(124,111,205,0.07)" } : {}),
+          ...(isDragTarget ? { outline: "2px solid var(--btn-active-bg)", outlineOffset: "-2px" } : {}),
+          cursor: isPinned ? "grab" : "default",
+        }}
+      >
+        {/* Pin toggle cell — always first */}
+        {!isDiscover && (
+          <td style={{ padding: "4px 8px", whiteSpace: "nowrap", width: "28px" }}>
+            <button
+              onClick={() => togglePin(d[rowKeyField])}
+              title={isPinned ? "Unpin" : "Pin to top"}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "14px",
+                lineHeight: 1,
+                color: isPinned ? "var(--btn-active-bg)" : "var(--text-xfaint)",
+                padding: "0 2px",
+                opacity: isPinned ? 1 : 0.4,
+                transition: "opacity 0.15s, color 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = isPinned ? "1" : "0.4"; }}
+            >
+              {isPinned ? "📌" : "📍"}
+            </button>
+          </td>
+        )}
+        {columns.map((col) => {
+          const rankInfo = !isRowGated ? getCellRank(col.key, col.type, d) : null;
+          const cellContent = col.key === "read"
+            ? <ReadBadge value={d[col.key]} />
+            : col.format ? formatValue(d[col.key], col.format)
+            : (d[col.key] ?? "—");
+          const rankTooltipContent = rankInfo ? (
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "15px", marginBottom: "4px" }}>
+                {rankInfo.rank} <span style={{ color: "var(--text-faint)", fontWeight: 400 }}>/ {rankInfo.total}</span>
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                Rank for <strong>{col.label}</strong>
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--text-faint)", marginTop: "4px", borderTop: "1px solid var(--border)", paddingTop: "4px" }}>
+                1 = best · {rankInfo.total} = worst
+              </div>
+            </div>
+          ) : null;
+          return (
+            <td
+              key={col.key}
+              style={{ padding: "6px 12px", whiteSpace: "nowrap" }}
+              onMouseEnter={rankTooltipContent ? (e) => showTooltip(rankTooltipContent, e, 3000) : undefined}
+              onMouseMove={rankTooltipContent ? moveTooltip : undefined}
+              onMouseLeave={rankTooltipContent ? hideTooltip : undefined}
+            >
+              <GatedCell blurred={isRowGated}>
+                {cellContent}
+              </GatedCell>
+            </td>
+          );
+        })}
+      </tr>
+    );
+  }
+
   const tableBody = !isSpecialTab && (
     <div style={{ overflowX: "auto" }}>
       <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
         <thead>
           <tr>
+            {/* Pin column header */}
+            {!isDiscover && <th style={{ width: "28px", borderBottom: "1px solid var(--border-strong)", padding: "6px 8px" }} />}
             {columns.map((col) => (
               <th
                 key={col.key}
                 onClick={() => handleSort(col.key)}
-                onMouseEnter={col.tooltip ? (e) => showTooltip(col.tooltip, e) : undefined}
-                onMouseMove={col.tooltip ? (e) => moveTooltip(col.tooltip, e) : undefined}
+                onMouseEnter={col.tooltip ? (e) => showTooltip(col.tooltip, e, 1200) : undefined}
+                onMouseMove={col.tooltip ? moveTooltip : undefined}
                 onMouseLeave={col.tooltip ? hideTooltip : undefined}
                 style={{
                   textAlign: "left",
@@ -532,37 +689,21 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
           </tr>
         </thead>
         <tbody>
-          {sorted.length === 0 ? (
+          {pinnedRows.length > 0 && (
             <tr>
-              <td colSpan={columns.length} style={{ padding: "16px", color: "var(--text-muted)" }}>
+              <td colSpan={columns.length + 1} style={{ padding: "2px 12px 0", fontSize: "10px", color: "var(--text-xfaint)", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", background: "var(--bg-subtle)" }}>
+                Pinned — drag to reorder
+              </td>
+            </tr>
+          )}
+          {displayRows.length === 0 ? (
+            <tr>
+              <td colSpan={columns.length + 1} style={{ padding: "16px", color: "var(--text-muted)" }}>
                 {isDiscover ? "No new candidates found." : "No data."}
               </td>
             </tr>
           ) : (
-            sorted.map((d, idx) => {
-              const isRowGated = !isDiscover && idx >= FREE_ROW_COUNT && !hasAccess;
-              const isClawdRow = !isDiscover && d["Project"] === "CLAWD";
-              return (
-                <tr
-                  key={d[rowKeyField]}
-                  style={isClawdRow ? { borderLeft: "3px solid #3B6D11", background: "var(--clawd-row-bg)" } : {}}
-                >
-                  {columns.map((col) => (
-                    <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
-                      <GatedCell blurred={isRowGated}>
-                        {col.key === "read" ? (
-                          <ReadBadge value={d[col.key]} />
-                        ) : col.format ? (
-                          formatValue(d[col.key], col.format)
-                        ) : (
-                          d[col.key] ?? "—"
-                        )}
-                      </GatedCell>
-                    </td>
-                  ))}
-                </tr>
-              );
-            })
+            displayRows.map((d, idx) => renderRow(d, idx))
           )}
         </tbody>
       </table>
@@ -597,7 +738,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       </div>
 
       <p style={{ fontSize: "12px", color: "var(--text-xfaint)", marginBottom: "12px" }}>
-        Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs. Hover any column header for 1–2 seconds to see what it means.
+        Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs. Hover a column header 1–2s for its definition. Hover any number 3s to see its rank. Click 📍 to pin a row to the top.
       </p>
 
       {!isSpecialTab && !isDiscover && <SummaryBar data={dataArr} />}
