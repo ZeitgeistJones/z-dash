@@ -207,6 +207,14 @@ function SummaryBar({ data }) {
   const avgOpp = oppValues.length > 0
     ? (oppValues.reduce((a, b) => a + Number(b), 0) / oppValues.length).toFixed(1)
     : "—";
+  const momValues = arr.map((d) => d["Mom"]).filter((v) => v != null && !Number.isNaN(Number(v)));
+  const avgMom = momValues.length > 0
+    ? (momValues.reduce((a, b) => a + Number(b), 0) / momValues.length).toFixed(1)
+    : "—";
+  const susValues = arr.map((d) => d["Sus"]).filter((v) => v != null && !Number.isNaN(Number(v)));
+  const avgSus = susValues.length > 0
+    ? (susValues.reduce((a, b) => a + Number(b), 0) / susValues.length).toFixed(1)
+    : "—";
   const withPrice = arr.filter((d) => d["priceUsd"] != null).length;
 
   const pill = (label, value) => (
@@ -225,6 +233,8 @@ function SummaryBar({ data }) {
       {pill("Projects tracked", total)}
       {pill("Breakout", breakouts)}
       {pill("Avg Opp Score", avgOpp)}
+      {pill("Avg Mom Score", avgMom)}
+      {pill("Avg Sus Score", avgSus)}
       {pill("Price data", withPrice)}
     </div>
   );
@@ -276,7 +286,7 @@ const PROF_GRID_DATA = [
 
 function ProfSignalKey() {
   return (
-    <details style={{ marginBottom: "16px", fontSize: "14px", color: "var(--text)" }}>
+    <details style={{ marginBottom: "4px", fontSize: "14px", color: "var(--text)" }}>
       <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text)", marginBottom: "10px" }}>
         Key: Profile, Signal & Read explained
       </summary>
@@ -328,9 +338,9 @@ function ProfSignalKey() {
   );
 }
 
-// ── Column-aligned key: measures th positions, places pills above each column ──
+// ── Column-aligned key: uses measured th widths to place pills in a flush row ──
 function ColumnAlignedKey({ columns, tableRef, label }) {
-  const [positions, setPositions] = useState([]);
+  const [colWidths, setColWidths] = useState([]);
   const [open, setOpen] = useState(false);
 
   useLayoutEffect(() => {
@@ -338,14 +348,7 @@ function ColumnAlignedKey({ columns, tableRef, label }) {
     function measure() {
       if (!tableRef.current) return;
       const ths = tableRef.current.querySelectorAll("thead th");
-      const containerEl = tableRef.current.closest("[data-key-container]");
-      if (!containerEl) return;
-      const containerRect = containerEl.getBoundingClientRect();
-      const pos = Array.from(ths).map((th) => {
-        const r = th.getBoundingClientRect();
-        return { left: r.left - containerRect.left, width: r.width };
-      });
-      setPositions(pos);
+      setColWidths(Array.from(ths).map((th) => th.getBoundingClientRect().width));
     }
     measure();
     window.addEventListener("resize", measure);
@@ -354,41 +357,43 @@ function ColumnAlignedKey({ columns, tableRef, label }) {
 
   return (
     <details
-      style={{ marginBottom: "8px" }}
+      style={{ marginBottom: "0px" }}
       onToggle={(e) => setOpen(e.target.open)}
     >
-      <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "14px", color: "var(--text)" }}>
+      <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "14px", color: "var(--text)", padding: "6px 0" }}>
         {label}
       </summary>
-      {open && positions.length > 0 && (
-        <div style={{ position: "relative", height: "0px", overflow: "visible", marginTop: "6px" }}>
+      {open && colWidths.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "stretch", marginTop: "8px", marginBottom: "8px", overflowX: "auto" }}>
           {columns.map((col, i) => {
-            const pos = positions[i];
-            if (!pos || !col.tooltip) return null;
+            const w = colWidths[i] || 120;
             return (
               <div
                 key={col.key}
                 style={{
-                  position: "absolute",
-                  left: pos.left,
-                  width: Math.max(pos.width, 140),
-                  top: 0,
-                  background: "var(--bg-muted)",
-                  border: "1px solid var(--border)",
+                  flexShrink: 0,
+                  width: w,
+                  minWidth: w,
+                  maxWidth: w,
+                  background: col.tooltip ? "var(--bg-muted)" : "transparent",
+                  border: col.tooltip ? "1px solid var(--border)" : "1px solid transparent",
                   borderRadius: "6px",
-                  padding: "6px 10px",
-                  fontSize: "11px",
-                  zIndex: 10,
-                  pointerEvents: "none",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                  padding: col.tooltip ? "8px 10px" : "0",
+                  fontSize: "12px",
+                  boxSizing: "border-box",
+                  marginRight: "0px",
                 }}
               >
-                <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {col.label}
-                </div>
-                <div style={{ color: "var(--text-muted)", lineHeight: "1.4" }}>
-                  {col.tooltip}
-                </div>
+                {col.tooltip && (
+                  <>
+                    <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: "4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {col.label}
+                    </div>
+                    <div style={{ color: "var(--text-muted)", lineHeight: "1.5", fontSize: "11px" }}>
+                      {col.tooltip}
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}
@@ -613,11 +618,13 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
 
       {activeTab === "Overview" && <ProfSignalKey />}
       {!isSpecialTab && !isDiscover && (
-        <ColumnAlignedKey
-          columns={columns}
-          tableRef={tableRef}
-          label="Key: what do these columns mean?"
-        />
+        <div style={{ marginTop: activeTab === "Overview" ? "12px" : "0" }}>
+          <ColumnAlignedKey
+            columns={columns}
+            tableRef={tableRef}
+            label="Key: what do these columns mean?"
+          />
+        </div>
       )}
 
       {isTripwire && <TripwirePanel hasAccess={hasAccess} />}
