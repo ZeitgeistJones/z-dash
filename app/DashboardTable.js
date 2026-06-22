@@ -58,7 +58,7 @@ const TABS = {
     { key: "User Grw %", label: "User Grw %", type: "number", format: "pct1" },
     { key: "New Wallets", label: "New Wallets", type: "number", format: "int" },
     { key: "Returning Wallets", label: "Returning Wallets", type: "number", format: "int" },
-    { key: "New %", label: "New %", type: "number", format: "pct1" },
+    { key: "New %", label: "New Wallet %", type: "number", format: "pct1" },
     { key: "Retention %", label: "Retention %", type: "number", format: "pct1" },
     { key: "Avg Txs Ret", label: "Avg Txs Ret", type: "number", format: "dec1" },
   ],
