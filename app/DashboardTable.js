@@ -25,7 +25,6 @@ const GATE_ABI = [
 
 const FREE_ROW_COUNT = 5;
 
-// Task 1 — tooltip field added to every column definition
 const TABS = {
   Overview: [
     { key: "Project", label: "Project", type: "string" },
@@ -87,7 +86,6 @@ const TABS = {
   ],
 };
 
-// Task 2 — Read badge tooltips
 const READ_TOOLTIPS = {
   Beacon: "Strongest combo: real usage growing and price agrees",
   "Quiet Beacon": "Strong fundamentals, but the market hasn't priced it in yet",
@@ -108,22 +106,9 @@ const READ_TOOLTIPS = {
 };
 
 const READ_TIERS = {
-  Beacon: "teal",
-  "Low Hum": "teal",
-  Undercurrent: "teal",
-  "Quiet Beacon": "teal",
-  Flare: "amber",
-  "Low Signal": "amber",
-  "Soft Ping": "amber",
-  Afterglow: "amber",
-  Standby: "amber",
-  Mirage: "amber",
-  Backdraft: "coral",
-  Flashpoint: "coral",
-  Overshoot: "coral",
-  Bleed: "coral",
-  "False Flare": "coral",
-  Flatline: "coral",
+  Beacon: "teal", "Low Hum": "teal", Undercurrent: "teal", "Quiet Beacon": "teal",
+  Flare: "amber", "Low Signal": "amber", "Soft Ping": "amber", Afterglow: "amber", Standby: "amber", Mirage: "amber",
+  Backdraft: "coral", Flashpoint: "coral", Overshoot: "coral", Bleed: "coral", "False Flare": "coral", Flatline: "coral",
 };
 
 const READ_TIER_COLORS = {
@@ -172,27 +157,12 @@ function GatedSection({ blurred, children }) {
       <div style={{ filter: "blur(8px)", pointerEvents: "none", userSelect: "none" }}>
         {children}
       </div>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <p
-          style={{
-            fontSize: "14px",
-            fontWeight: 600,
-            color: "var(--text)",
-            background: "var(--bg)",
-            padding: "12px 20px",
-            borderRadius: "8px",
-            border: "1px solid var(--border)",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-          }}
-        >
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{
+          fontSize: "14px", fontWeight: 600, color: "var(--text)", background: "var(--bg)",
+          padding: "12px 20px", borderRadius: "8px", border: "1px solid var(--border)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+        }}>
           🔒 Connect a wallet holding 10M+ CLAWD to unlock
         </p>
       </div>
@@ -217,20 +187,11 @@ function StatusBanner({ lastUpdated }) {
   const formatted = lastUpdated
     ? new Date(lastUpdated).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
     : "unknown";
-
   return (
-    <div
-      style={{
-        background: "var(--bg-subtle)",
-        border: "1px solid var(--border)",
-        borderRadius: "8px",
-        padding: "12px 16px",
-        marginBottom: "16px",
-        fontSize: "13px",
-        color: "var(--text-muted)",
-        lineHeight: "1.5",
-      }}
-    >
+    <div style={{
+      background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "8px",
+      padding: "12px 16px", marginBottom: "16px", fontSize: "13px", color: "var(--text-muted)", lineHeight: "1.5",
+    }}>
       <strong>v1 — running on free-tier infrastructure.</strong> Behavioral scores (Opp/Mom/Sus and the
       Activity/Wallets/Buyers &amp; Risk tabs) are refreshed manually, not live —{" "}
       <strong>scores last updated: {formatted}</strong>. Price and Market Cap refresh automatically about
@@ -240,7 +201,6 @@ function StatusBanner({ lastUpdated }) {
   );
 }
 
-// Task 3 — Summary Stats Bar
 function SummaryBar({ data }) {
   const arr = Array.isArray(data) ? data : [];
   const total = arr.length;
@@ -252,20 +212,11 @@ function SummaryBar({ data }) {
   const withPrice = arr.filter((d) => d["priceUsd"] != null).length;
 
   const pill = (label, value) => (
-    <span
-      key={label}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "6px",
-        background: "var(--bg-muted)",
-        border: "1px solid var(--border)",
-        borderRadius: "6px",
-        padding: "5px 12px",
-        fontSize: "13px",
-        color: "var(--text)",
-      }}
-    >
+    <span key={label} style={{
+      display: "inline-flex", alignItems: "center", gap: "6px",
+      background: "var(--bg-muted)", border: "1px solid var(--border)",
+      borderRadius: "6px", padding: "5px 12px", fontSize: "13px", color: "var(--text)",
+    }}>
       <span style={{ color: "var(--text-faint)", fontWeight: 400 }}>{label}</span>
       <span style={{ fontWeight: 700, color: "var(--pill-value)" }}>{value}</span>
     </span>
@@ -281,101 +232,167 @@ function SummaryBar({ data }) {
   );
 }
 
-// Task 6 — Tag filter buttons
-function TagFilterBar({ tagFilter, setTagFilter }) {
-  const filters = [
-    { key: "all", label: "All" },
-    { key: "agents", label: "Agents" },
-    { key: "non-agents", label: "Non-Agents" },
-    { key: "other", label: "Other" },
-  ];
-
-  return (
-    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "12px", alignItems: "center" }}>
-      <span style={{ fontSize: "12px", color: "var(--text-faint)", marginRight: "2px" }}>Filter:</span>
-      {filters.map((f) => (
-        <button
-          key={f.key}
-          onClick={() => setTagFilter(f.key)}
-          style={{
-            padding: "4px 12px",
-            borderRadius: "6px",
-            border: tagFilter === f.key ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
-            background: tagFilter === f.key ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
-            color: tagFilter === f.key ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
-            cursor: "pointer",
-            fontWeight: tagFilter === f.key ? 600 : 400,
-            fontSize: "12px",
-          }}
-        >
-          {f.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function matchesTagFilter(row, tagFilter) {
-  if (tagFilter === "all") return true;
-  const tag = row.Tag || row.tag || "";
-  if (tagFilter === "agents") return tag.startsWith("agent-") || tag === "clanker-via-bankrbot-prefork";
-  if (tagFilter === "non-agents") return tag.startsWith("non-agent-");
-  if (tagFilter === "other") return tag === "neither";
-  return true;
-}
+// ── Task 1: Grid-layout ProfSignalKey ────────────────────────────────────────
+const PROF_GRID_DATA = [
+  {
+    prof: "Breakout",
+    subtitle: "strong momentum + strong sustainability",
+    signals: [
+      { signal: "Confirmed Growth", read: "Beacon", desc: "Strongest combo: real usage growing, price agrees." },
+      { signal: "Absorbed",         read: "Undercurrent", desc: "Volume isn't moving price yet — possible quiet accumulation." },
+      { signal: "Thin Rally",       read: "Overshoot", desc: "Price up on light volume — may be ahead of itself." },
+      { signal: "Cooling",          read: "Quiet Beacon", desc: "Market hasn't noticed yet. Possibly undiscovered." },
+    ],
+  },
+  {
+    prof: "Quick Mover",
+    subtitle: "strong momentum, weak sustainability",
+    signals: [
+      { signal: "Confirmed Growth", read: "Flare",      desc: "Hot right now, but durability is unproven." },
+      { signal: "Absorbed",         read: "Backdraft",  desc: "Fast activity, price not rewarding it." },
+      { signal: "Thin Rally",       read: "Flashpoint", desc: "Classic pump pattern: thin volume, price popping." },
+      { signal: "Cooling",          read: "Afterglow",  desc: "Momentum likely fading along with price." },
+    ],
+  },
+  {
+    prof: "Slow Burner",
+    subtitle: "weak momentum, strong sustainability",
+    signals: [
+      { signal: "Confirmed Growth", read: "Low Hum",    desc: "Steady, sticky usage with price finally agreeing." },
+      { signal: "Absorbed",         read: "Low Signal", desc: "Durable usage, possibly undervalued." },
+      { signal: "Thin Rally",       read: "Soft Ping",  desc: "Modest, low-risk price tick on a stable base." },
+      { signal: "Cooling",          read: "Standby",    desc: "Stable but quiet — a sleeper." },
+    ],
+  },
+  {
+    prof: "Cold",
+    subtitle: "weak momentum + weak sustainability",
+    signals: [
+      { signal: "Confirmed Growth", read: "Mirage",      desc: "Price rising despite weak fundamentals — hype-driven." },
+      { signal: "Absorbed",         read: "Bleed",       desc: "Weak fundamentals, falling price — possible distribution." },
+      { signal: "Thin Rally",       read: "False Flare", desc: "Weakest, highest-risk combo. No substance behind it." },
+      { signal: "Cooling",          read: "Flatline",    desc: "Weak across the board — lowest priority." },
+    ],
+  },
+];
 
 function ProfSignalKey() {
   return (
     <details style={{ marginBottom: "16px", fontSize: "14px", color: "var(--text)" }}>
-      <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text)" }}>
+      <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text)", marginBottom: "10px" }}>
         Key: what do Prof + Signal + Read mean?
       </summary>
-      <div style={{ marginTop: "10px", lineHeight: "1.6" }}>
-        <p style={{ marginBottom: "8px" }}>
-          <strong>Prof</strong> = behavioral profile (wallets/txs/retention, price-independent).{" "}
-          <strong>Signal</strong> = does price agree with volume right now (a separate, price-aware layer).{" "}
-          <strong>Read</strong> = the named verdict for that specific Prof + Signal combination.
-        </p>
+      <p style={{ marginTop: "8px", marginBottom: "12px", color: "var(--text-muted)", fontSize: "13px", lineHeight: "1.5" }}>
+        <strong>Prof</strong> = behavioral profile (price-independent). <strong>Signal</strong> = does price agree with volume this week. <strong>Read</strong> = the named verdict for that combination.
+      </p>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: "12px",
+      }}>
+        {PROF_GRID_DATA.map((col) => (
+          <div key={col.prof} style={{
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            overflow: "hidden",
+            background: "var(--bg)",
+          }}>
+            {/* Column header */}
+            <div style={{
+              background: "var(--bg-muted)",
+              padding: "8px 12px",
+              borderBottom: "1px solid var(--border)",
+            }}>
+              <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text)" }}>{col.prof}</div>
+              <div style={{ fontSize: "11px", color: "var(--text-faint)", marginTop: "2px" }}>{col.subtitle}</div>
+            </div>
+            {/* Signal rows */}
+            {col.signals.map((row) => (
+              <div key={row.signal} style={{
+                padding: "8px 12px",
+                borderTop: "1px solid var(--border)",
+              }}>
+                <div style={{ fontSize: "11px", color: "var(--text-faint)", marginBottom: "4px", fontWeight: 500 }}>
+                  {row.signal}
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "6px", flexWrap: "wrap" }}>
+                  <ReadBadge value={row.read} />
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4", paddingTop: "2px" }}>
+                    {row.desc}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+}
 
-        <p style={{ marginTop: "12px", marginBottom: "4px" }}>
-          <strong>Breakout</strong> (strong momentum + strong sustainability)
-        </p>
-        <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
-          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Beacon" /> — strongest combo on the board: real usage growing, price agrees.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Undercurrent" /> — strong fundamentals, but volume isn't moving price yet.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="Overshoot" /> — strong fundamentals, price up on light volume.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Quiet Beacon" /> — strong fundamentals, market hasn't noticed yet.</li>
-        </ul>
+// ── Task 2: Tab contextual keys ───────────────────────────────────────────────
+function MetricPill({ name, desc }) {
+  return (
+    <div style={{
+      background: "var(--bg-muted)",
+      border: "1px solid var(--border)",
+      borderRadius: "8px",
+      padding: "8px 14px",
+      minWidth: "180px",
+      maxWidth: "220px",
+      flex: "1 1 180px",
+    }}>
+      <div style={{ fontWeight: 700, fontSize: "12px", color: "var(--text)", marginBottom: "3px" }}>{name}</div>
+      <div style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4" }}>{desc}</div>
+    </div>
+  );
+}
 
-        <p style={{ marginTop: "12px", marginBottom: "4px" }}>
-          <strong>Quick Mover</strong> (strong momentum, weak sustainability)
-        </p>
-        <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
-          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Flare" /> — hot right now, durability unproven.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Backdraft" /> — fast activity, price not rewarding it.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="Flashpoint" /> — classic pump pattern.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Afterglow" /> — momentum likely fading.</li>
-        </ul>
+const TAB_KEYS = {
+  Activity: {
+    label: "Key: what do these columns mean?",
+    metrics: [
+      { name: "Vol 30d",   desc: "Total dollars traded on DEX in 30 days" },
+      { name: "Vol Grw %", desc: "Did trading volume go up or down vs last week" },
+      { name: "Tx Grw %",  desc: "Did transaction count go up or down vs last week" },
+      { name: "Vol/Tx",    desc: "Average dollar size per trade — higher means more serious traders" },
+      { name: "Txs/User",  desc: "How many times the average wallet transacted — higher means more engaged" },
+    ],
+  },
+  Wallets: {
+    label: "Key: what do these columns mean?",
+    metrics: [
+      { name: "Wallets 30d",  desc: "Total unique wallets active this month" },
+      { name: "User Grw %",   desc: "Did the wallet count go up or down vs last week" },
+      { name: "New Wallet %", desc: "What share of this month's users are brand new" },
+      { name: "Retention %",  desc: "Are this week's users the same people as last week — over 100% means growing" },
+      { name: "Avg Txs Ret",  desc: "How active are the returning users specifically" },
+    ],
+  },
+  "Buyers & Risk": {
+    label: "Key: what do these columns mean?",
+    metrics: [
+      { name: "Qlty %",      desc: "How clean the activity looks — penalizes bots and suspicious patterns" },
+      { name: "Risk %",      desc: "How concentrated volume is in a few wallets — lower is healthier" },
+      { name: "Top10 %",     desc: "What share of all transactions come from just the top 10 wallets" },
+      { name: "1st Buyers",  desc: "Wallets buying this token for the very first time — a demand signal" },
+      { name: "1st Sellers", desc: "Wallets selling for the very first time — a distribution signal" },
+    ],
+  },
+};
 
-        <p style={{ marginTop: "12px", marginBottom: "4px" }}>
-          <strong>Slow Burner</strong> (weak momentum, strong sustainability)
-        </p>
-        <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
-          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Low Hum" /> — steady, sticky usage finally agreeing with price.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Low Signal" /> — durable usage, possibly undervalued.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="Soft Ping" /> — modest, low-risk price tick.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Standby" /> — stable but quiet.</li>
-        </ul>
-
-        <p style={{ marginTop: "12px", marginBottom: "4px" }}>
-          <strong>Cold</strong> (weak momentum + weak sustainability)
-        </p>
-        <ul style={{ marginTop: 0, paddingLeft: "20px", listStyle: "none" }}>
-          <li style={{ marginBottom: "4px" }}><strong>Confirmed Growth</strong> — <ReadBadge value="Mirage" /> — rising despite weak fundamentals, possibly hype-driven.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Absorbed</strong> — <ReadBadge value="Bleed" /> — weak fundamentals, falling price, worth caution.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Thin Rally</strong> — <ReadBadge value="False Flare" /> — weakest, highest-risk combo.</li>
-          <li style={{ marginBottom: "4px" }}><strong>Cooling</strong> — <ReadBadge value="Flatline" /> — weak across the board.</li>
-        </ul>
+function TabKey({ tab }) {
+  const keyData = TAB_KEYS[tab];
+  if (!keyData) return null;
+  return (
+    <details style={{ marginBottom: "16px" }}>
+      <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "14px", color: "var(--text)", marginBottom: "8px" }}>
+        {keyData.label}
+      </summary>
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+        {keyData.metrics.map((m) => (
+          <MetricPill key={m.name} name={m.name} desc={m.desc} />
+        ))}
       </div>
     </details>
   );
@@ -385,8 +402,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const [activeTab, setActiveTab] = useState("Overview");
   const [sortKey, setSortKey] = useState("Opp");
   const [sortDir, setSortDir] = useState("desc");
-  // Task 6 — tag filter state
-  const [tagFilter, setTagFilter] = useState("all");
 
   const { address } = useAccount();
   const { data: hasAccessRaw } = useReadContract({
@@ -404,7 +419,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const isClawd = activeTab === "CLAWD";
   const isDiscover = activeTab === "Discover";
   const isSpecialTab = isTripwire || isAbout || isClawd;
-  const isDataTab = !isSpecialTab && !isDiscover;
   const columns = isSpecialTab ? [] : TABS[activeTab];
   const rawSource = isDiscover ? discoveryData : data;
   const sourceData = isSpecialTab ? [] : Array.isArray(rawSource) ? rawSource : [];
@@ -420,9 +434,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   function rankBy(field, ascending = false) {
     const sorted = [...dataArr]
       .filter((d) => d[field] != null && d[field] !== "")
-      .sort((a, b) =>
-        ascending ? Number(a[field]) - Number(b[field]) : Number(b[field]) - Number(a[field])
-      );
+      .sort((a, b) => ascending ? Number(a[field]) - Number(b[field]) : Number(b[field]) - Number(a[field]));
     const idx = sorted.findIndex((d) => d["Project"] === "CLAWD");
     return idx >= 0 ? idx + 1 : null;
   }
@@ -436,16 +448,12 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     "Buyers 30d", "Buyers 7d", "1st Buyers 30d", "1st Buyers 7d",
     "1st Sellers 30d", "1st Sellers 7d", "Qlty %", "Risk %", "Top10 %", "Vol/Tx",
   ];
-
   const LOWER_IS_BETTER = new Set(["Risk %", "Top10 %"]);
   const ranks = {};
-  RANK_FIELDS.forEach((f) => {
-    ranks[f] = rankBy(f, LOWER_IS_BETTER.has(f));
-  });
+  RANK_FIELDS.forEach((f) => { ranks[f] = rankBy(f, LOWER_IS_BETTER.has(f)); });
 
   function handleTabChange(tab) {
     setActiveTab(tab);
-    setTagFilter("all"); // reset filter on tab change
     if (tab === "Tripwire" || tab === "About" || tab === "CLAWD") return;
     const firstNumeric = TABS[tab]?.find((c) => c.type === "number");
     setSortKey(firstNumeric ? firstNumeric.key : TABS[tab]?.[0]?.key);
@@ -476,18 +484,12 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     }
   }
 
-  // Task 6 — apply tag filter before sort (data tabs only)
-  const filteredSource = isDataTab
-    ? sourceData.filter((row) => matchesTagFilter(row, tagFilter))
-    : sourceData;
-
   const sorted = isSpecialTab
     ? []
-    : [...filteredSource].sort((a, b) => {
+    : [...sourceData].sort((a, b) => {
         const col = columns.find((c) => c.key === sortKey) || columns[0];
         let aVal = a[sortKey];
         let bVal = b[sortKey];
-
         if (col.type === "number") {
           aVal = aVal == null || aVal === "" ? -Infinity : Number(aVal);
           bVal = bVal == null || bVal === "" ? -Infinity : Number(bVal);
@@ -499,14 +501,9 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         }
       });
 
-  // Task 5 — tab column count label helper
   function tabLabel(tab) {
-    if (tab === "Discover") {
-      return `Discover${discoveryData.length > 0 ? ` (${discoveryData.length})` : ""}`;
-    }
-    if (TABS[tab]) {
-      return `${tab} (${TABS[tab].length})`;
-    }
+    if (tab === "Discover") return `Discover${discoveryData.length > 0 ? ` (${discoveryData.length})` : ""}`;
+    if (TABS[tab]) return `${tab} (${TABS[tab].length})`;
     return tab;
   }
 
@@ -548,16 +545,11 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
           ) : (
             sorted.map((d, idx) => {
               const isRowGated = !isDiscover && idx >= FREE_ROW_COUNT && !hasAccess;
-              // Task 4 — CLAWD row highlight
               const isClawdRow = !isDiscover && d["Project"] === "CLAWD";
               return (
                 <tr
                   key={d[rowKeyField]}
-                  style={
-                    isClawdRow
-                      ? { borderLeft: "3px solid var(--clawd-row-border)", background: "var(--clawd-row-bg)" }
-                      : {}
-                  }
+                  style={isClawdRow ? { borderLeft: "3px solid #3B6D11", background: "var(--clawd-row-bg)" } : {}}
                 >
                   {columns.map((col) => (
                     <td key={col.key} style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
@@ -581,7 +573,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     </div>
   );
 
-  // All tab buttons — unified loop
   const allTabsToRender = [...Object.keys(TABS), "CLAWD", "Tripwire", "About"];
 
   return (
@@ -613,11 +604,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs.
       </p>
 
-      {/* Task 3 — Summary stats bar (data tabs only) */}
-      {isDataTab && <SummaryBar data={dataArr} />}
-
-      {/* Task 6 — Tag filter (data tabs only) */}
-      {isDataTab && <TagFilterBar tagFilter={tagFilter} setTagFilter={setTagFilter} />}
+      {!isSpecialTab && !isDiscover && <SummaryBar data={dataArr} />}
 
       {isDiscover && (
         <p style={{ color: "var(--text-muted)", marginBottom: "12px", fontSize: "14px" }}>
@@ -628,6 +615,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       )}
 
       {activeTab === "Overview" && <ProfSignalKey />}
+      {TAB_KEYS[activeTab] && <TabKey tab={activeTab} />}
 
       {isTripwire && <TripwirePanel hasAccess={hasAccess} />}
       {isAbout && <AboutPanel />}
