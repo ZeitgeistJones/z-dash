@@ -126,12 +126,15 @@ export default function RootLayout({ children }) {
 
               *, *::before, *::after { box-sizing: border-box; }
 
+              html {
+                background: #1c1b22;
+              }
+
               body {
                 background: var(--bg);
                 color: var(--text);
                 margin: 0;
                 font-family: sans-serif;
-                transition: background 0.25s, color 0.25s;
               }
             `,
           }}
