@@ -72,7 +72,7 @@ function savePins(pins) {
   catch {}
 }
 
-const TAB_ORDER = ["Overview", "Activity", "Wallets", "Buyers & Risk", "Discover", "CLAWD", "Tripwire", "About"];
+const TAB_ORDER = ["Overview", "Activity", "Wallets", "Buyers & Risk", "Discover", "CLAWD", "The Wire", "About"];
 
 const GATE_ADDRESS = "0xc22B7b983EC81523c969753c2385106835E8CfCE";
 const GATE_ABI = [
@@ -258,7 +258,7 @@ function StatusBanner({ lastUpdated }) {
       <strong>v1 — running on free-tier infrastructure.</strong> Behavioral scores (Opp/Mom/Sus and the
       Activity/Wallets/Buyers &amp; Risk tabs) are refreshed manually, not live —{" "}
       <strong>scores last updated: {formatted}</strong>. Price and Market Cap refresh automatically about
-      once an hour. Tripwire triggers a real, fresh on-chain query every time it's clicked, so usage may be
+      once an hour. The Wire triggers a real, fresh on-chain query every time it's clicked, so usage may be
       limited to stay within free-tier query credits.
     </div>
   );
@@ -427,7 +427,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   });
   const hasAccess = !!hasAccessRaw;
 
-  const isTripwire = activeTab === "Tripwire";
+  const isTripwire = activeTab === "The Wire";
   const isAbout = activeTab === "About";
   const isClawd = activeTab === "CLAWD";
   const isDiscover = activeTab === "Discover";
@@ -514,7 +514,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
 
   function handleTabChange(tab) {
     setActiveTab(tab);
-    if (tab === "Tripwire" || tab === "About" || tab === "CLAWD") return;
+    if (tab === "The Wire" || tab === "About" || tab === "CLAWD") return;
     const firstNumeric = TABS[tab]?.find((c) => c.type === "number");
     setSortKey(firstNumeric ? firstNumeric.key : TABS[tab]?.[0]?.key);
     setSortDir("desc");
@@ -710,7 +710,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     </div>
   );
 
-  const allTabsToRender = [...Object.keys(TABS), "CLAWD", "Tripwire", "About"];
+  const allTabsToRender = [...Object.keys(TABS), "CLAWD", "The Wire", "About"];
 
   return (
     <div>
