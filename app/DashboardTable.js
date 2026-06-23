@@ -5,7 +5,6 @@ import { base } from "wagmi/chains";
 import TripwirePanel from "./TripwirePanel";
 import AboutPanel from "./AboutPanel";
 import ClawdPanel from "./ClawdPanel";
-import GateButton from "./GateButton";
 
 
 // ── Custom delayed tooltip ────────────────────────────────────────────────────
@@ -715,7 +714,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   return (
     <div>
       <StatusBanner lastUpdated={lastUpdated} />
-      <GateButton hasAccess={hasAccess} />
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "6px", flexWrap: "wrap" }}>
         {allTabsToRender.map((tab) => (
