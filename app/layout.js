@@ -16,9 +16,7 @@ export default function RootLayout({ children }) {
                 try {
                   var saved = localStorage.getItem('zdash-theme');
                   // Default is dark — only remove it if user explicitly chose light
-                  if (saved !== 'light') {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                  }
+                  document.documentElement.setAttribute('data-theme', 'dark');
                 } catch(e) {}
               })();
             `,
