@@ -137,6 +137,7 @@ const TABS = {
     { key: "1st Buyers 7d", label: "1st Buyers 7d", type: "number", format: "int", tooltip: "Wallets buying for the first time in the last 7 days" },
     { key: "1st Sellers 30d", label: "1st Sellers 30d", type: "number", format: "int", tooltip: "Wallets selling this token for the very first time in the last 30 days" },
     { key: "1st Sellers 7d", label: "1st Sellers 7d", type: "number", format: "int", tooltip: "Wallets selling for the first time in the last 7 days" },
+    { key: "Buy/Sell Ratio", label: "Buy/Sell", type: "number", format: "dec2", tooltip: "Ratio of unique buyers to unique sellers this week — above 1.0 means more wallets buying than selling" },
     { key: "Non-Trade New 30d", label: "Non-Trade New", type: "number", format: "int", tooltip: "New wallets that arrived without buying or selling — likely from airdrops or transfers" },
     { key: "Top10 %", label: "Top10 %", type: "number", format: "pct1", tooltip: "Share of all transactions coming from the top 10 most active wallets — lower is healthier" },
     { key: "Risk %", label: "Risk %", type: "number", format: "pct1", tooltip: "How concentrated the volume is in a few wallets — higher means more concentrated, which is higher risk" },
