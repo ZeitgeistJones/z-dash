@@ -2,21 +2,24 @@
 import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(true); // default dark
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    setDark(document.documentElement.getAttribute("data-theme") === "dark");
+    // Dark is default — light only if localStorage explicitly says so
+    setDark(localStorage.getItem("zdash-theme") !== "light");
   }, []);
 
   function toggle() {
     const next = !dark;
     setDark(next);
     if (next) {
+      // Switching to dark — this is the default, so just remove the light override
       document.documentElement.setAttribute("data-theme", "dark");
-      localStorage.setItem("zdash-theme", "dark");
+      localStorage.removeItem("zdash-theme"); // no need to save — dark is default
     } else {
+      // Switching to light — explicitly save so it survives refresh
       document.documentElement.removeAttribute("data-theme");
       localStorage.setItem("zdash-theme", "light");
     }
