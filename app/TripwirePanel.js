@@ -199,9 +199,9 @@ export default function TripwirePanel({ hasAccess }) {
             fontSize: "16px",
           }}
         >
-          {status === "starting" && "⚡ Starting…"}
-          {status === "running" && "⚡ Running on Dune…"}
-          {(status === "idle" || status === "done" || status === "error") && "⚡ Run The Wire"}
+          {status === "starting" && "Starting…"}
+          {status === "running" && "Running on Dune…"}
+          {(status === "idle" || status === "done" || status === "error") && "Trip The Wire"}
         </button>
 
         {status === "running" && (
