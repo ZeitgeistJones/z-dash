@@ -1,8 +1,8 @@
 import Providers from "./providers";
 
 export const metadata = {
-  title: "z-dash",
-  description: "Cohort dashboard",
+  title: "Tripwire",
+  description: "On-chain intelligence for CLAWD holders on Base",
 };
 
 export default function RootLayout({ children }) {
