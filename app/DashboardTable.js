@@ -562,7 +562,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
 
   function tabLabel(tab) {
     if (tab === "Discover") return `Discover${discoveryData.length > 0 ? ` (${discoveryData.length})` : ""}`;
-    if (TABS[tab]) return `${tab} (${TABS[tab].length})`;
     return tab;
   }
 
@@ -607,15 +606,15 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                fontSize: "14px",
+                fontSize: "16px",
                 lineHeight: 1,
-                color: isPinned ? "var(--btn-active-bg)" : "var(--text-xfaint)",
+                color: isPinned ? "var(--btn-active-bg)" : "var(--text-faint)",
                 padding: "0 2px",
-                opacity: isPinned ? 1 : 0.4,
+                opacity: isPinned ? 1 : 0.65,
                 transition: "opacity 0.15s, color 0.15s",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = isPinned ? "1" : "0.4"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "var(--btn-active-bg)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = isPinned ? "1" : "0.65"; e.currentTarget.style.color = isPinned ? "var(--btn-active-bg)" : "var(--text-faint)"; }}
             >
               {isPinned ? "📌" : "📍"}
             </button>
