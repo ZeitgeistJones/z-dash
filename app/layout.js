@@ -128,15 +128,30 @@ export default function RootLayout({ children }) {
 
               *, *::before, *::after { box-sizing: border-box; }
 
+              /* Hardcoded dark background on both html and body —
+                 no CSS variable dependency, paints immediately before
+                 any script or style cascade resolves */
               html {
                 background: #1c1b22;
               }
 
               body {
-                background: var(--bg);
-                color: var(--text);
+                background: #1c1b22;
+                color: #e8e6f0;
                 margin: 0;
                 font-family: sans-serif;
+              }
+
+              /* Once data-theme is confirmed, switch to CSS variables */
+              [data-theme="dark"] body {
+                background: var(--bg);
+                color: var(--text);
+              }
+
+              /* Light mode override — only when explicitly toggled */
+              html:not([data-theme="dark"]) body {
+                background: var(--bg);
+                color: var(--text);
               }
             `,
           }}
