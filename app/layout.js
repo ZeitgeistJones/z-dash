@@ -15,9 +15,11 @@ export default function RootLayout({ children }) {
               (function() {
                 try {
                   document.documentElement.setAttribute('data-theme', 'dark');
+                  document.documentElement.style.backgroundColor = '#1c1b22';
                   window.addEventListener('pageshow', function(e) {
                     if (e.persisted) {
                       document.documentElement.setAttribute('data-theme', 'dark');
+                      document.documentElement.style.backgroundColor = '#1c1b22';
                     }
                   });
                 } catch(e) {}
