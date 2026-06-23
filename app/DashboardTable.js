@@ -8,11 +8,11 @@ import ClawdPanel from "./ClawdPanel";
 
 
 // ── Custom delayed tooltip ────────────────────────────────────────────────────
-const HEADER_TOOLTIP_DELAY = 1200; // column header definitions
-const CELL_TOOLTIP_DELAY   = 3000; // cell rank on hover
+const HEADER_TOOLTIP_DELAY = 1200;
+const CELL_TOOLTIP_DELAY   = 3000;
 
 function useDelayedTooltip() {
-  const [tooltip, setTooltip] = useState(null); // { content, x, y }
+  const [tooltip, setTooltip] = useState(null);
   const timerRef = useRef(null);
 
   const show = useCallback((content, e, delay = HEADER_TOOLTIP_DELAY) => {
@@ -304,7 +304,6 @@ function SummaryBar({ data }) {
   );
 }
 
-// ── Task 1: Grid-layout ProfSignalKey ────────────────────────────────────────
 const PROF_GRID_DATA = [
   {
     prof: "Breakout",
@@ -369,7 +368,6 @@ function ProfSignalKey() {
             overflow: "hidden",
             background: "var(--bg)",
           }}>
-            {/* Column header */}
             <div style={{
               background: "var(--bg-muted)",
               padding: "8px 12px",
@@ -378,7 +376,6 @@ function ProfSignalKey() {
               <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text)" }}>{col.prof}</div>
               <div style={{ fontSize: "11px", color: "var(--text-faint)", marginTop: "2px" }}>{col.subtitle}</div>
             </div>
-            {/* Signal rows */}
             {col.signals.map((row) => (
               <div key={row.signal} style={{
                 padding: "8px 12px",
@@ -408,11 +405,10 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const [sortKey, setSortKey] = useState("Opp");
   const [sortDir, setSortDir] = useState("desc");
   const [pinnedKeys, setPinnedKeys] = useState([]);
-  const [dragOver, setDragOver] = useState(null); // key being dragged over
-  const dragKeyRef = useRef(null); // key being dragged
+  const [dragOver, setDragOver] = useState(null);
+  const dragKeyRef = useRef(null);
   const { tooltip, show: showTooltip, move: moveTooltip, hide: hideTooltip } = useDelayedTooltip();
 
-  // Load pins from localStorage on mount
   useEffect(() => { setPinnedKeys(loadPins()); }, []);
 
   const { address } = useAccount();
@@ -464,7 +460,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const ranks = {};
   RANK_FIELDS.forEach((f) => { ranks[f] = rankBy(f, LOWER_IS_BETTER.has(f)); });
 
-  // ── Pin helpers ───────────────────────────────────────────────────────────
   function togglePin(key) {
     setPinnedKeys((prev) => {
       const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
@@ -493,14 +488,11 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     });
   }
 
-  // ── Per-cell rank computation ─────────────────────────────────────────────
-  // Returns "rank / total" string for a numeric cell value within the full dataset
   function getCellRank(colKey, colType, rowData) {
     if (colType !== "number" || isDiscover) return null;
     const val = rowData[colKey];
     if (val == null || val === "" || Number.isNaN(Number(val))) return null;
     const lowerBetter = new Set(["Risk %", "Top10 %"]);
-    // Sort descending by default (higher = better = rank 1), ascending for lower-is-better
     const asc = lowerBetter.has(colKey);
     const all = dataArr
       .map((d) => Number(d[colKey]))
@@ -565,7 +557,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     return tab;
   }
 
-  // Split sorted into pinned-first, then rest
   const pinnedRows = !isDiscover
     ? pinnedKeys.map((k) => sorted.find((d) => d[rowKeyField] === k)).filter(Boolean)
     : [];
@@ -596,7 +587,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
           cursor: isPinned ? "grab" : "default",
         }}
       >
-        {/* Pin toggle cell — always first */}
         {!isDiscover && (
           <td style={{ padding: "4px 8px", whiteSpace: "nowrap", width: "28px" }}>
             <button
@@ -662,7 +652,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
         <thead>
           <tr>
-            {/* Pin column header */}
             {!isDiscover && <th style={{ width: "28px", borderBottom: "1px solid var(--border-strong)", padding: "6px 8px" }} />}
             {columns.map((col) => (
               <th
@@ -750,24 +739,26 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
 
       {activeTab === "Overview" && <ProfSignalKey />}
 
-      {isTripwire && <TripwirePanel hasAccess={hasAccess} />}
-      {isAbout && <AboutPanel />}
-      {isClawd && (
-        <GatedSection blurred={!hasAccess}>
-          <ClawdPanel
-            clawdRow={clawdRow}
-            totalProjects={totalProjects}
-            opportunityRank={opportunityRank}
-            momentumRank={momentumRank}
-            sustainabilityRank={sustainabilityRank}
-            marketCapRank={marketCapRank}
-            walletsRank={walletsRank}
-            ranks={ranks}
-          />
-        </GatedSection>
-      )}
+      <div style={{ minHeight: "500px" }}>
+        {isTripwire && <TripwirePanel hasAccess={hasAccess} />}
+        {isAbout && <AboutPanel />}
+        {isClawd && (
+          <GatedSection blurred={!hasAccess}>
+            <ClawdPanel
+              clawdRow={clawdRow}
+              totalProjects={totalProjects}
+              opportunityRank={opportunityRank}
+              momentumRank={momentumRank}
+              sustainabilityRank={sustainabilityRank}
+              marketCapRank={marketCapRank}
+              walletsRank={walletsRank}
+              ranks={ranks}
+            />
+          </GatedSection>
+        )}
+        {isDiscover ? <GatedSection blurred={!hasAccess}>{tableBody}</GatedSection> : tableBody}
+      </div>
 
-      {isDiscover ? <GatedSection blurred={!hasAccess}>{tableBody}</GatedSection> : tableBody}
       <TooltipBox tooltip={tooltip} />
     </div>
   );
