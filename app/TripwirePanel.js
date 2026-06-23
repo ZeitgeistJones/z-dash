@@ -76,7 +76,7 @@ export default function TripwirePanel({ hasAccess }) {
       const startRes = await fetch("/api/tripwire/start", { method: "POST" });
       const startJson = await startRes.json();
       if (!startRes.ok || !startJson.executionId) {
-        throw new Error(startJson.error || "Failed to start Tripwire run");
+        throw new Error(startJson.error || "Failed to start The Wire run");
       }
 
       setStatus("running");
@@ -147,7 +147,7 @@ export default function TripwirePanel({ hasAccess }) {
       lineHeight: "1.6",
       maxWidth: "680px",
     }}>
-      Tripwire is an on-demand pulse check — it runs a fresh Dune query right now and returns activity from
+      The Wire is an on-demand pulse check — it runs a fresh Dune query right now and returns activity from
       the last 15 minutes, 1 hour, 6 hours, and 24 hours across every tracked project. Use it right after
       news breaks, a token gets mentioned, or you want to know what's moving at this exact moment. It takes
       1–2 minutes to run. Usage may be limited to stay within free-tier Dune query credits.
@@ -171,10 +171,10 @@ export default function TripwirePanel({ hasAccess }) {
             fontSize: "16px",
           }}
         >
-          🔒 Run Tripwire Check
+          🔒 Run The Wire
         </button>
         <span style={{ color: "var(--text-faint)", fontSize: "13px", marginTop: "10px" }}>
-          Connect a wallet holding 10M+ CLAWD to use Tripwire.
+          Connect a wallet holding 10M+ CLAWD to use The Wire.
         </span>
       </div>
     );
@@ -201,7 +201,7 @@ export default function TripwirePanel({ hasAccess }) {
         >
           {status === "starting" && "⚡ Starting…"}
           {status === "running" && "⚡ Running on Dune…"}
-          {(status === "idle" || status === "done" || status === "error") && "⚡ Run Tripwire Check"}
+          {(status === "idle" || status === "done" || status === "error") && "⚡ Run The Wire"}
         </button>
 
         {status === "running" && (
