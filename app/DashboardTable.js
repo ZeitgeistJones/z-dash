@@ -142,43 +142,21 @@ const TABS = {
   ],
 };
 
-const TAG_FILTERS = [
-  {
-    group: "Type",
-    filters: [
-      { label: "Agents",      key: "agents",      match: (tag) => (tag && tag.startsWith("agent-")) || tag === "clanker-via-bankrbot-prefork" },
-      { label: "Non-Agents",  key: "non-agents",  match: (tag) => tag && (tag.startsWith("non-agent-") || tag === "neither") },
-    ],
-  },
-  {
-    group: "Launched via",
-    filters: [
-      { label: "Virtuals",          key: "virtuals",   match: (tag) => tag === "agent-via-virtuals" || tag === "non-agent-via-virtuals" },
-      { label: "Clanker",           key: "clanker",    match: (tag) => tag === "agent-via-clanker" || tag === "non-agent-via-clanker" },
-      { label: "Bankr",             key: "bankr",      match: (tag) => tag === "agent-via-bankr" || tag === "non-agent-via-bankr" },
-      { label: "Bankr (pre-fork)",  key: "prefork",    match: (tag) => tag === "clanker-via-bankrbot-prefork" },
-      { label: "Other",             key: "other",      match: (tag) => tag === "agent-independent" || tag === "non-agent-infrastructure" || tag === "neither" },
-    ],
-  },
-  {
-    group: "Profile",
-    filters: [
-      { label: "Breakout",     key: "breakout",     match: (_, d) => d["Prof"] === "Breakout" },
-      { label: "Quick Mover",  key: "quick-mover",  match: (_, d) => d["Prof"] === "Quick Mover" },
-      { label: "Slow Burner",  key: "slow-burner",  match: (_, d) => d["Prof"] === "Slow Burner" },
-      { label: "Cold",         key: "cold",         match: (_, d) => d["Prof"] === "Cold" },
-    ],
-  },
-  {
-    group: "Signal",
-    filters: [
-      { label: "Confirmed Growth", key: "confirmed-growth", match: (_, d) => d["signal"] === "Confirmed Growth" },
-      { label: "Absorbed",         key: "absorbed",         match: (_, d) => d["signal"] === "Absorbed" },
-      { label: "Thin Rally",       key: "thin-rally",       match: (_, d) => d["signal"] === "Thin Rally" },
-      { label: "Cooling",          key: "cooling",          match: (_, d) => d["signal"] === "Cooling" },
-    ],
-  },
+// Two groups, horizontal, always visible
+const TYPE_FILTERS = [
+  { label: "Agents",     key: "agents",     match: (tag) => (tag && tag.startsWith("agent-")) || tag === "clanker-via-bankrbot-prefork" },
+  { label: "Non-Agents", key: "non-agents", match: (tag) => tag && (tag.startsWith("non-agent-") || tag === "neither") },
 ];
+
+const PLATFORM_FILTERS = [
+  { label: "Virtuals",         key: "virtuals", match: (tag) => tag === "agent-via-virtuals" || tag === "non-agent-via-virtuals" },
+  { label: "Clanker",          key: "clanker",  match: (tag) => tag === "agent-via-clanker" || tag === "non-agent-via-clanker" },
+  { label: "Bankr",            key: "bankr",    match: (tag) => tag === "agent-via-bankr" || tag === "non-agent-via-bankr" },
+  { label: "Bankr (pre-fork)", key: "prefork",  match: (tag) => tag === "clanker-via-bankrbot-prefork" },
+  { label: "Other",            key: "other",    match: (tag) => tag === "agent-independent" || tag === "non-agent-infrastructure" || tag === "neither" },
+];
+
+const ALL_FILTER_DEFS = [...TYPE_FILTERS, ...PLATFORM_FILTERS];
 
 const READ_TIERS = {
   Beacon: "teal", "Low Hum": "teal", Undercurrent: "teal", "Quiet Beacon": "teal",
@@ -297,43 +275,44 @@ function SummaryBar({ data }) {
 }
 
 function FilterBar({ activeFilters, onToggle, onClear }) {
+  const hasActive = activeFilters.size > 0;
+
+  const pill = (f) => {
+    const isActive = activeFilters.has(f.key);
+    return (
+      <button
+        key={f.key}
+        onClick={() => onToggle(f.key)}
+        style={{
+          padding: "3px 9px", borderRadius: "5px", fontSize: "11px", cursor: "pointer",
+          border: isActive ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
+          background: isActive ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
+          color: isActive ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
+          fontWeight: isActive ? 600 : 400,
+          whiteSpace: "nowrap",
+          transition: "background 0.1s, color 0.1s",
+        }}
+      >
+        {f.label}
+      </button>
+    );
+  };
+
   return (
-    <div style={{ marginBottom: "12px" }}>
-      {TAG_FILTERS.map((group) => (
-        <div key={group.group} style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap", marginBottom: "6px" }}>
-          <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.04em", minWidth: "80px", flexShrink: 0 }}>
-            {group.group}
-          </span>
-          {group.filters.map((f) => {
-            const isActive = activeFilters.has(f.key);
-            return (
-              <button
-                key={f.key}
-                onClick={() => onToggle(f.key)}
-                style={{
-                  padding: "3px 10px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
-                  border: isActive ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
-                  background: isActive ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
-                  color: isActive ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
-                  fontWeight: isActive ? 600 : 400,
-                  transition: "background 0.15s, color 0.15s",
-                }}
-              >
-                {f.label}
-              </button>
-            );
-          })}
-        </div>
-      ))}
-      {activeFilters.size > 0 && (
+    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+      {TYPE_FILTERS.map(pill)}
+      <span style={{ width: "1px", height: "16px", background: "var(--border-strong)", flexShrink: 0, alignSelf: "center" }} />
+      {PLATFORM_FILTERS.map(pill)}
+      {hasActive && (
         <button
           onClick={onClear}
           style={{
-            padding: "3px 10px", borderRadius: "6px", border: "1px solid var(--border)",
-            background: "none", color: "var(--text-faint)", cursor: "pointer", fontSize: "11px", marginTop: "2px",
+            padding: "3px 8px", borderRadius: "5px", fontSize: "11px",
+            border: "1px solid var(--border)", background: "none",
+            color: "var(--text-faint)", cursor: "pointer",
           }}
         >
-          Clear all
+          Clear
         </button>
       )}
     </div>
@@ -344,10 +323,10 @@ const PROF_GRID_DATA = [
   {
     prof: "Breakout", subtitle: "strong momentum + strong sustainability",
     signals: [
-      { signal: "Confirmed Growth", read: "Beacon",      desc: "Strongest combo: real usage growing, price agrees." },
-      { signal: "Absorbed",         read: "Undercurrent",desc: "Volume isn't moving price yet — possible quiet accumulation." },
-      { signal: "Thin Rally",       read: "Overshoot",   desc: "Price up on light volume — may be ahead of itself." },
-      { signal: "Cooling",          read: "Quiet Beacon",desc: "Market hasn't noticed yet. Possibly undiscovered." },
+      { signal: "Confirmed Growth", read: "Beacon",       desc: "Strongest combo: real usage growing, price agrees." },
+      { signal: "Absorbed",         read: "Undercurrent", desc: "Volume isn't moving price yet — possible quiet accumulation." },
+      { signal: "Thin Rally",       read: "Overshoot",    desc: "Price up on light volume — may be ahead of itself." },
+      { signal: "Cooling",          read: "Quiet Beacon", desc: "Market hasn't noticed yet. Possibly undiscovered." },
     ],
   },
   {
@@ -463,7 +442,6 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     return () => { cancelled = true; };
   }, [address]);
 
-  // ── Persist watchlist to Upstash ─────────────────────────────────────────
   async function persistWatchlist(newAddresses, newColumnConfig) {
     if (!address) return;
     try {
@@ -486,9 +464,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     if (!tokenAddress) return;
     const addrLower = tokenAddress.toLowerCase();
     setWatchedAddresses((prev) => {
-      const next = prev.includes(addrLower)
-        ? prev.filter((a) => a !== addrLower)
-        : [...prev, addrLower];
+      const next = prev.includes(addrLower) ? prev.filter((a) => a !== addrLower) : [...prev, addrLower];
       persistWatchlist(next, watchlistColumnConfig);
       return next;
     });
@@ -500,8 +476,8 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   }
 
   const isTripwire = activeTab === "The Wire";
-  const isAbout = activeTab === "About";
-  const isClawd = activeTab === "CLAWD";
+  const isAbout    = activeTab === "About";
+  const isClawd    = activeTab === "CLAWD";
   const isDiscover = activeTab === "Discover";
   const isWatchlist = activeTab === "Watchlist";
   const isSpecialTab = isTripwire || isAbout || isClawd || isWatchlist;
@@ -526,7 +502,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   }
 
   const marketCapRank = rankBy("marketCapUsd");
-  const walletsRank = rankBy("Wallets 30d");
+  const walletsRank   = rankBy("Wallets 30d");
 
   const RANK_FIELDS = [
     "Vol Grw %", "Tx Grw %", "User Grw %", "Txs 30d", "Vol 30d", "Txs/User", "Traders",
@@ -592,7 +568,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
 
   function handleTabChange(tab) {
     setActiveTab(tab);
-    if (tab === "The Wire" || tab === "About" || tab === "CLAWD" || tab === "Watchlist") return;
+    if (["The Wire", "About", "CLAWD", "Watchlist"].includes(tab)) return;
     const firstNumeric = TABS[tab]?.find((c) => c.type === "number");
     setSortKey(firstNumeric ? firstNumeric.key : TABS[tab]?.[0]?.key);
     setSortDir("desc");
@@ -618,20 +594,17 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     else { setSortKey(key); setSortDir("desc"); }
   }
 
-  // ── Filter logic: AND between groups, OR within group ────────────────────
-  const allFilterDefs = TAG_FILTERS.flatMap((g) => g.filters);
-
+  // AND between groups, OR within group
   const filtered = isSpecialTab || isDiscover
     ? sourceData
     : activeFilters.size === 0
       ? sourceData
       : sourceData.filter((d) => {
-          const activeGroups = TAG_FILTERS.filter((g) =>
-            g.filters.some((f) => activeFilters.has(f.key))
-          );
-          return activeGroups.every((g) =>
-            g.filters.filter((f) => activeFilters.has(f.key)).some((f) => f.match(d["Tag"], d))
-          );
+          const typeActive = TYPE_FILTERS.filter((f) => activeFilters.has(f.key));
+          const platformActive = PLATFORM_FILTERS.filter((f) => activeFilters.has(f.key));
+          const typeOk = typeActive.length === 0 || typeActive.some((f) => f.match(d["Tag"]));
+          const platformOk = platformActive.length === 0 || platformActive.some((f) => f.match(d["Tag"]));
+          return typeOk && platformOk;
         });
 
   const sorted = isSpecialTab
@@ -665,12 +638,12 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const displayRows = [...pinnedRows, ...unpinnedRows];
 
   function renderRow(d, idx) {
-    const isPinned    = !isDiscover && pinnedKeys.includes(d[rowKeyField]);
-    const unpinnedIdx = idx - pinnedRows.length;
-    const isRowGated  = !isDiscover && !isPinned && unpinnedIdx >= FREE_ROW_COUNT && !hasAccess;
-    const isClawdRow  = !isDiscover && d["Project"] === "CLAWD";
+    const isPinned     = !isDiscover && pinnedKeys.includes(d[rowKeyField]);
+    const unpinnedIdx  = idx - pinnedRows.length;
+    const isRowGated   = !isDiscover && !isPinned && unpinnedIdx >= FREE_ROW_COUNT && !hasAccess;
+    const isClawdRow   = !isDiscover && d["Project"] === "CLAWD";
     const isDragTarget = dragOver === d[rowKeyField] && isPinned;
-    const isWatched   = !isDiscover && watchedAddresses.includes((d["Address"] || "").toLowerCase());
+    const isWatched    = !isDiscover && watchedAddresses.includes((d["Address"] || "").toLowerCase());
 
     return (
       <tr
@@ -681,8 +654,8 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         onDragEnd={isPinned ? handleDragEnd : undefined}
         onDragOver={isPinned ? (e) => e.preventDefault() : undefined}
         style={{
-          ...(isClawdRow ? { borderLeft: "3px solid #3B6D11", background: "var(--clawd-row-bg)" } : {}),
-          ...(isPinned ? { background: isDragTarget ? "var(--bg-subtle)" : "rgba(124,111,205,0.07)" } : {}),
+          ...(isClawdRow   ? { borderLeft: "3px solid #3B6D11", background: "var(--clawd-row-bg)" } : {}),
+          ...(isPinned     ? { background: isDragTarget ? "var(--bg-subtle)" : "rgba(124,111,205,0.07)" } : {}),
           ...(isDragTarget ? { outline: "2px solid var(--btn-active-bg)", outlineOffset: "-2px" } : {}),
           cursor: isPinned ? "grab" : "default",
         }}
@@ -697,7 +670,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
                 lineHeight: 1, padding: "0 2px",
                 color: isWatched ? "#f5c518" : "var(--text-faint)",
                 opacity: isWatched ? 1 : 0.5,
-                transition: "opacity 0.15s, color 0.15s",
+                transition: "opacity 0.15s",
               }}
               onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
               onMouseLeave={(e) => { e.currentTarget.style.opacity = isWatched ? "1" : "0.5"; }}
@@ -824,7 +797,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         ))}
       </div>
 
-      <p style={{ fontSize: "12px", color: "var(--text-xfaint)", marginBottom: "12px" }}>
+      <p style={{ fontSize: "12px", color: "var(--text-xfaint)", marginBottom: "10px" }}>
         Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs. Hover a column header 1–2s for its definition. Hover any number 3s to see its rank. Click ⭐ to watch, 📍 to pin to top.
       </p>
 
@@ -846,9 +819,9 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       {activeTab === "Overview" && <ProfSignalKey />}
 
       <div style={{ minHeight: "500px" }}>
-        {isTripwire && <TripwirePanel hasAccess={hasAccess} />}
-        {isAbout && <AboutPanel />}
-        {isClawd && (
+        {isTripwire  && <TripwirePanel hasAccess={hasAccess} />}
+        {isAbout     && <AboutPanel />}
+        {isClawd     && (
           <GatedSection blurred={!hasAccess}>
             <ClawdPanel
               clawdRow={clawdRow}
