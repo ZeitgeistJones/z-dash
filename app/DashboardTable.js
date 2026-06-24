@@ -152,143 +152,16 @@ const TABS = {
   ],
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. ADD this constant near the top of DashboardTable.js, after the TABS object
-// ─────────────────────────────────────────────────────────────────────────────
-
 const TAG_FILTERS = [
-  {
-    label: "All",
-    key: "all",
-    match: () => true,
-  },
-  {
-    label: "AI Agents",
-    key: "agents",
-    match: (tag) => tag && tag.startsWith("agent-") || tag === "clanker-via-bankrbot-prefork",
-  },
-  {
-    label: "Independent",
-    key: "agent-independent",
-    match: (tag) => tag === "agent-independent",
-  },
-  {
-    label: "Via Virtuals",
-    key: "agent-via-virtuals",
-    match: (tag) => tag === "agent-via-virtuals",
-  },
-  {
-    label: "Via Clanker",
-    key: "agent-via-clanker",
-    match: (tag) => tag === "agent-via-clanker" || tag === "clanker-via-bankrbot-prefork",
-  },
-  {
-    label: "Via Bankr",
-    key: "agent-via-bankr",
-    match: (tag) => tag === "agent-via-bankr",
-  },
-  {
-    label: "Non-Agents",
-    key: "non-agents",
-    match: (tag) => tag && (tag.startsWith("non-agent-") || tag === "neither"),
-  },
+  { label: "All",         key: "all",               match: () => true },
+  { label: "AI Agents",   key: "agents",             match: (tag) => (tag && tag.startsWith("agent-")) || tag === "clanker-via-bankrbot-prefork" },
+  { label: "Independent", key: "agent-independent",  match: (tag) => tag === "agent-independent" },
+  { label: "Via Virtuals",key: "agent-via-virtuals", match: (tag) => tag === "agent-via-virtuals" },
+  { label: "Via Clanker", key: "agent-via-clanker",  match: (tag) => tag === "agent-via-clanker" || tag === "clanker-via-bankrbot-prefork" },
+  { label: "Via Bankr",   key: "agent-via-bankr",    match: (tag) => tag === "agent-via-bankr" },
+  { label: "Non-Agents",  key: "non-agents",         match: (tag) => tag && (tag.startsWith("non-agent-") || tag === "neither") },
 ];
 
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 2. ADD this state inside the DashboardTable component, near the other useState calls
-// ─────────────────────────────────────────────────────────────────────────────
-
-const [activeFilter, setActiveFilter] = useState("all");
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 3. ADD this FilterBar component — paste it outside DashboardTable, near the
-//    other small components like SummaryBar
-// ─────────────────────────────────────────────────────────────────────────────
-
-function FilterBar({ activeFilter, onFilter }) {
-  return (
-    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
-      {TAG_FILTERS.map((f) => {
-        const isActive = activeFilter === f.key;
-        return (
-          <button
-            key={f.key}
-            onClick={() => onFilter(f.key)}
-            style={{
-              padding: "4px 12px",
-              borderRadius: "6px",
-              border: isActive ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
-              background: isActive ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
-              color: isActive ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
-              cursor: "pointer",
-              fontSize: "12px",
-              fontWeight: isActive ? 600 : 400,
-              transition: "background 0.15s, color 0.15s",
-            }}
-          >
-            {f.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 4. REPLACE the existing `const sorted = ...` block with this version
-//    that applies the filter before sorting
-// ─────────────────────────────────────────────────────────────────────────────
-
-const activeFilterDef = TAG_FILTERS.find((f) => f.key === activeFilter) || TAG_FILTERS[0];
-
-const filtered = isSpecialTab || isDiscover
-  ? sourceData
-  : sourceData.filter((d) => activeFilterDef.match(d["Tag"]));
-
-const sorted = isSpecialTab
-  ? []
-  : [...filtered].sort((a, b) => {
-      const col = columns.find((c) => c.key === sortKey) || columns[0];
-      let aVal = a[sortKey];
-      let bVal = b[sortKey];
-      if (col.type === "number") {
-        aVal = aVal == null || aVal === "" ? -Infinity : Number(aVal);
-        bVal = bVal == null || bVal === "" ? -Infinity : Number(bVal);
-        return sortDir === "desc" ? bVal - aVal : aVal - bVal;
-      } else {
-        aVal = aVal == null ? "" : String(aVal);
-        bVal = bVal == null ? "" : String(bVal);
-        return sortDir === "desc" ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
-      }
-    });
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 5. ADD the FilterBar to the JSX, just before the SummaryBar
-//    Find this block in the return():
-//
-//    {!isSpecialTab && !isDiscover && <SummaryBar data={dataArr} />}
-//
-//    Replace it with:
-// ─────────────────────────────────────────────────────────────────────────────
-
-{!isSpecialTab && !isDiscover && (
-  <>
-    <FilterBar activeFilter={activeFilter} onFilter={setActiveFilter} />
-    <SummaryBar data={filtered} />
-  </>
-)}
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// NOTE: passing `filtered` to SummaryBar instead of `dataArr` means the
-// summary pills (Projects tracked, Breakout count, Avg scores) update
-// to reflect the current filter — so "Projects tracked 74" when you're
-// on AI Agents, not always 178.
-// ─────────────────────────────────────────────────────────────────────────────
 const READ_TOOLTIPS = {
   Beacon: "Strongest combo: real usage growing and price agrees",
   "Quiet Beacon": "Strong fundamentals, but the market hasn't priced it in yet",
@@ -325,18 +198,11 @@ function ReadBadge({ value }) {
   const tier = READ_TIERS[value] || "amber";
   const colors = READ_TIER_COLORS[tier];
   return (
-    <span
-      style={{
-        display: "inline-block",
-        fontSize: "12px",
-        fontWeight: 600,
-        padding: "2px 8px",
-        borderRadius: "6px",
-        background: colors.bg,
-        color: colors.text,
-        whiteSpace: "nowrap",
-      }}
-    >
+    <span style={{
+      display: "inline-block", fontSize: "12px", fontWeight: 600,
+      padding: "2px 8px", borderRadius: "6px",
+      background: colors.bg, color: colors.text, whiteSpace: "nowrap",
+    }}>
       {value}
     </span>
   );
@@ -408,16 +274,13 @@ function SummaryBar({ data }) {
   const breakouts = arr.filter((d) => d["Prof"] === "Breakout").length;
   const oppValues = arr.map((d) => d["Opp"]).filter((v) => v != null && !Number.isNaN(Number(v)));
   const avgOpp = oppValues.length > 0
-    ? (oppValues.reduce((a, b) => a + Number(b), 0) / oppValues.length).toFixed(1)
-    : "—";
+    ? (oppValues.reduce((a, b) => a + Number(b), 0) / oppValues.length).toFixed(1) : "—";
   const momValues = arr.map((d) => d["Mom"]).filter((v) => v != null && !Number.isNaN(Number(v)));
   const avgMom = momValues.length > 0
-    ? (momValues.reduce((a, b) => a + Number(b), 0) / momValues.length).toFixed(1)
-    : "—";
+    ? (momValues.reduce((a, b) => a + Number(b), 0) / momValues.length).toFixed(1) : "—";
   const susValues = arr.map((d) => d["Sus"]).filter((v) => v != null && !Number.isNaN(Number(v)));
   const avgSus = susValues.length > 0
-    ? (susValues.reduce((a, b) => a + Number(b), 0) / susValues.length).toFixed(1)
-    : "—";
+    ? (susValues.reduce((a, b) => a + Number(b), 0) / susValues.length).toFixed(1) : "—";
   const withPrice = arr.filter((d) => d["priceUsd"] != null).length;
 
   const pill = (label, value) => (
@@ -443,15 +306,44 @@ function SummaryBar({ data }) {
   );
 }
 
+function FilterBar({ activeFilter, onFilter }) {
+  return (
+    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+      {TAG_FILTERS.map((f) => {
+        const isActive = activeFilter === f.key;
+        return (
+          <button
+            key={f.key}
+            onClick={() => onFilter(f.key)}
+            style={{
+              padding: "4px 12px",
+              borderRadius: "6px",
+              border: isActive ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
+              background: isActive ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
+              color: isActive ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
+              cursor: "pointer",
+              fontSize: "12px",
+              fontWeight: isActive ? 600 : 400,
+              transition: "background 0.15s, color 0.15s",
+            }}
+          >
+            {f.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 const PROF_GRID_DATA = [
   {
     prof: "Breakout",
     subtitle: "strong momentum + strong sustainability",
     signals: [
-      { signal: "Confirmed Growth", read: "Beacon", desc: "Strongest combo: real usage growing, price agrees." },
-      { signal: "Absorbed",         read: "Undercurrent", desc: "Volume isn't moving price yet — possible quiet accumulation." },
-      { signal: "Thin Rally",       read: "Overshoot", desc: "Price up on light volume — may be ahead of itself." },
-      { signal: "Cooling",          read: "Quiet Beacon", desc: "Market hasn't noticed yet. Possibly undiscovered." },
+      { signal: "Confirmed Growth", read: "Beacon",      desc: "Strongest combo: real usage growing, price agrees." },
+      { signal: "Absorbed",         read: "Undercurrent",desc: "Volume isn't moving price yet — possible quiet accumulation." },
+      { signal: "Thin Rally",       read: "Overshoot",   desc: "Price up on light volume — may be ahead of itself." },
+      { signal: "Cooling",          read: "Quiet Beacon",desc: "Market hasn't noticed yet. Possibly undiscovered." },
     ],
   },
   {
@@ -495,31 +387,15 @@ function ProfSignalKey() {
       <p style={{ marginTop: "8px", marginBottom: "12px", color: "var(--text-muted)", fontSize: "13px", lineHeight: "1.5" }}>
         <strong>Prof</strong> = behavioral profile (price-independent). <strong>Signal</strong> = does price agree with volume this week. <strong>Read</strong> = the named verdict for that combination.
       </p>
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: "12px",
-      }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
         {PROF_GRID_DATA.map((col) => (
-          <div key={col.prof} style={{
-            border: "1px solid var(--border)",
-            borderRadius: "8px",
-            overflow: "hidden",
-            background: "var(--bg)",
-          }}>
-            <div style={{
-              background: "var(--bg-muted)",
-              padding: "8px 12px",
-              borderBottom: "1px solid var(--border)",
-            }}>
+          <div key={col.prof} style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", background: "var(--bg)" }}>
+            <div style={{ background: "var(--bg-muted)", padding: "8px 12px", borderBottom: "1px solid var(--border)" }}>
               <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text)" }}>{col.prof}</div>
               <div style={{ fontSize: "11px", color: "var(--text-faint)", marginTop: "2px" }}>{col.subtitle}</div>
             </div>
             {col.signals.map((row) => (
-              <div key={row.signal} style={{
-                padding: "8px 12px",
-                borderTop: "1px solid var(--border)",
-              }}>
+              <div key={row.signal} style={{ padding: "8px 12px", borderTop: "1px solid var(--border)" }}>
                 <div style={{ fontSize: "11px", color: "var(--text-faint)", marginBottom: "4px", fontWeight: 500 }}>
                   {row.signal}
                 </div>
@@ -545,6 +421,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const [sortDir, setSortDir] = useState("desc");
   const [pinnedKeys, setPinnedKeys] = useState([]);
   const [dragOver, setDragOver] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("all");
   const dragKeyRef = useRef(null);
   const { tooltip, show: showTooltip, move: moveTooltip, hide: hideTooltip } = useDelayedTooltip();
 
@@ -674,9 +551,15 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     }
   }
 
+  const activeFilterDef = TAG_FILTERS.find((f) => f.key === activeFilter) || TAG_FILTERS[0];
+
+  const filtered = isSpecialTab || isDiscover
+    ? sourceData
+    : sourceData.filter((d) => activeFilterDef.match(d["Tag"]));
+
   const sorted = isSpecialTab
     ? []
-    : [...sourceData].sort((a, b) => {
+    : [...filtered].sort((a, b) => {
         const col = columns.find((c) => c.key === sortKey) || columns[0];
         let aVal = a[sortKey];
         let bVal = b[sortKey];
@@ -705,10 +588,10 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const displayRows = [...pinnedRows, ...unpinnedRows];
 
   function renderRow(d, idx) {
-    const isPinned   = !isDiscover && pinnedKeys.includes(d[rowKeyField]);
+    const isPinned    = !isDiscover && pinnedKeys.includes(d[rowKeyField]);
     const unpinnedIdx = idx - pinnedRows.length;
-    const isRowGated = !isDiscover && !isPinned && unpinnedIdx >= FREE_ROW_COUNT && !hasAccess;
-    const isClawdRow = !isDiscover && d["Project"] === "CLAWD";
+    const isRowGated  = !isDiscover && !isPinned && unpinnedIdx >= FREE_ROW_COUNT && !hasAccess;
+    const isClawdRow  = !isDiscover && d["Project"] === "CLAWD";
     const isDragTarget = dragOver === d[rowKeyField] && isPinned;
 
     return (
@@ -732,14 +615,9 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
               onClick={() => togglePin(d[rowKeyField])}
               title={isPinned ? "Unpin" : "Pin to top"}
               style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "16px",
-                lineHeight: 1,
-                color: isPinned ? "var(--btn-active-bg)" : "var(--text-faint)",
-                padding: "0 2px",
-                opacity: isPinned ? 1 : 0.65,
+                background: "none", border: "none", cursor: "pointer", fontSize: "16px",
+                lineHeight: 1, color: isPinned ? "var(--btn-active-bg)" : "var(--text-faint)",
+                padding: "0 2px", opacity: isPinned ? 1 : 0.65,
                 transition: "opacity 0.15s, color 0.15s",
               }}
               onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "var(--btn-active-bg)"; }}
@@ -800,12 +678,8 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
                 onMouseMove={col.tooltip ? moveTooltip : undefined}
                 onMouseLeave={col.tooltip ? hideTooltip : undefined}
                 style={{
-                  textAlign: "left",
-                  borderBottom: "1px solid var(--border-strong)",
-                  padding: "6px 12px",
-                  cursor: "pointer",
-                  userSelect: "none",
-                  whiteSpace: "nowrap",
+                  textAlign: "left", borderBottom: "1px solid var(--border-strong)",
+                  padding: "6px 12px", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap",
                 }}
               >
                 {col.label}
@@ -848,13 +722,11 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
             key={tab}
             onClick={() => handleTabChange(tab)}
             style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
+              padding: "8px 16px", borderRadius: "6px",
               border: activeTab === tab ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
               background: activeTab === tab ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
               color: activeTab === tab ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
-              cursor: "pointer",
-              fontWeight: activeTab === tab ? 600 : 400,
+              cursor: "pointer", fontWeight: activeTab === tab ? 600 : 400,
             }}
           >
             {tabLabel(tab)}
@@ -866,7 +738,12 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs. Hover a column header 1–2s for its definition. Hover any number 3s to see its rank. Click 📍 to pin a row to the top.
       </p>
 
-      {!isSpecialTab && !isDiscover && <SummaryBar data={dataArr} />}
+      {!isSpecialTab && !isDiscover && (
+        <>
+          <FilterBar activeFilter={activeFilter} onFilter={setActiveFilter} />
+          <SummaryBar data={filtered} />
+        </>
+      )}
 
       {isDiscover && (
         <p style={{ color: "var(--text-muted)", marginBottom: "12px", fontSize: "14px" }}>
