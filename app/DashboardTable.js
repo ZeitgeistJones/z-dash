@@ -5,11 +5,11 @@ import { base } from "wagmi/chains";
 import TripwirePanel from "./TripwirePanel";
 import AboutPanel from "./AboutPanel";
 import ClawdPanel from "./ClawdPanel";
+import WatchlistPanel from "./WatchlistPanel";
 
 
 // ── Custom delayed tooltip ────────────────────────────────────────────────────
 const HEADER_TOOLTIP_DELAY = 1200;
-const CELL_TOOLTIP_DELAY   = 3000;
 
 function useDelayedTooltip() {
   const [tooltip, setTooltip] = useState(null);
@@ -41,20 +41,10 @@ function TooltipBox({ tooltip }) {
   const { content, x, y } = tooltip;
   return (
     <div style={{
-      position: "fixed",
-      left: x + 14,
-      top: y + 14,
-      maxWidth: "280px",
-      background: "var(--bg-muted)",
-      border: "1px solid var(--border-strong)",
-      borderRadius: "6px",
-      padding: "8px 12px",
-      fontSize: "12px",
-      color: "var(--text)",
-      lineHeight: "1.5",
-      zIndex: 9999,
-      pointerEvents: "none",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+      position: "fixed", left: x + 14, top: y + 14, maxWidth: "280px",
+      background: "var(--bg-muted)", border: "1px solid var(--border-strong)",
+      borderRadius: "6px", padding: "8px 12px", fontSize: "12px", color: "var(--text)",
+      lineHeight: "1.5", zIndex: 9999, pointerEvents: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
     }}>
       {typeof content === "string" ? content : content}
     </div>
@@ -71,7 +61,7 @@ function savePins(pins) {
   catch {}
 }
 
-const TAB_ORDER = ["Overview", "Activity", "Wallets", "Buyers & Risk", "Discover", "CLAWD", "The Wire", "About"];
+const TAB_ORDER = ["Overview", "Activity", "Wallets", "Buyers & Risk", "Watchlist", "Discover", "CLAWD", "The Wire", "About"];
 
 const GATE_ADDRESS = "0xc22B7b983EC81523c969753c2385106835E8CfCE";
 const GATE_ABI = [
@@ -106,13 +96,13 @@ const TABS = {
     { key: "Project",      label: "Project",            type: "string" },
     { key: "marketCapUsd", label: "Market Cap",         type: "number", format: "usd",  tooltip: "Live market cap in USD from CoinGecko" },
     { key: "Vol 30d",      label: "Vol (30d)",          type: "number", format: "usd",  tooltip: "Total dollar value traded on DEX in the last 30 days" },
-    { key: "Vol/Tx",       label: "Vol/Tx (30d)",       type: "number", format: "dec2", tooltip: "Average dollar value per transaction over the last 30 days — a proxy for how serious the traders are" },
+    { key: "Vol/Tx",       label: "Vol/Tx (30d)",       type: "number", format: "dec2", tooltip: "Average dollar value per transaction over the last 30 days" },
     { key: "Vol/Wlt",      label: "Vol/Wlt (30d)",      type: "number", format: "dec2", tooltip: "Average dollar volume per unique wallet over the last 30 days" },
     { key: "Vol Grw %",    label: "Vol Grw % (WoW)",    type: "number", format: "pct1", tooltip: "DEX volume change: most recent 7 days vs the 7 days before that" },
     { key: "Txs 30d",      label: "Txs (30d)",          type: "number", format: "int",  tooltip: "Total number of on-chain transactions in the last 30 days" },
     { key: "Txs 7d",       label: "Txs (7d)",           type: "number", format: "int",  tooltip: "Total number of on-chain transactions in the last 7 days" },
     { key: "Tx Grw %",     label: "Tx Grw % (WoW)",     type: "number", format: "pct1", tooltip: "Transaction count change: most recent 7 days vs the 7 days before that" },
-    { key: "Txs/User",     label: "Txs/User (30d)",     type: "number", format: "dec1", tooltip: "Average number of transactions per wallet in the last 30 days — higher means more engaged users" },
+    { key: "Txs/User",     label: "Txs/User (30d)",     type: "number", format: "dec1", tooltip: "Average number of transactions per wallet in the last 30 days" },
   ],
   Wallets: [
     { key: "Project",            label: "Project",                 type: "string" },
@@ -120,17 +110,17 @@ const TABS = {
     { key: "Wallets 30d",        label: "Wallets (30d)",           type: "number", format: "int",  tooltip: "Unique wallets that interacted with this token in the last 30 days" },
     { key: "Wallets 7d",         label: "Wallets (7d)",            type: "number", format: "int",  tooltip: "Unique wallets that interacted in the last 7 days" },
     { key: "User Grw %",         label: "User Grw % (WoW)",        type: "number", format: "pct1", tooltip: "Unique wallet count change: most recent 7 days vs the 7 days before that" },
-    { key: "New Wallets",        label: "New Wallets (30d)",       type: "number", format: "int",  tooltip: "Wallets active in the last 30 days with no activity in the prior 31–90 day window — new to this token" },
-    { key: "Returning Wallets",  label: "Returning Wallets (30d)", type: "number", format: "int",  tooltip: "Wallets active in both the last 30 days and the prior 31–90 day window — users who came back" },
-    { key: "New %",              label: "New Wallet % (30d)",      type: "number", format: "pct1", tooltip: "New Wallets ÷ total Wallets 30d — high means lots of new arrivals, low means mostly returning users" },
-    { key: "Retention %",        label: "Retention % (WoW)",       type: "number", format: "pct1", tooltip: "Wallets retained from last week ÷ this week's active wallets — measures how well the token holds its users week over week" },
-    { key: "Avg Txs Ret",        label: "Avg Txs Ret (7d)",        type: "number", format: "dec1", tooltip: "Average transactions by wallets active both this week and last week — measures how engaged the loyal users are" },
+    { key: "New Wallets",        label: "New Wallets (30d)",       type: "number", format: "int",  tooltip: "Wallets active in the last 30 days with no activity in the prior 31–90 day window" },
+    { key: "Returning Wallets",  label: "Returning Wallets (30d)", type: "number", format: "int",  tooltip: "Wallets active in both the last 30 days and the prior 31–90 day window" },
+    { key: "New %",              label: "New Wallet % (30d)",      type: "number", format: "pct1", tooltip: "New Wallets ÷ total Wallets 30d" },
+    { key: "Retention %",        label: "Retention % (WoW)",       type: "number", format: "pct1", tooltip: "Wallets retained from last week ÷ this week's active wallets" },
+    { key: "Avg Txs Ret",        label: "Avg Txs Ret (7d)",        type: "number", format: "dec1", tooltip: "Average transactions by wallets active both this week and last week" },
   ],
   "Buyers & Risk": [
     { key: "Project",          label: "Project",              type: "string" },
     { key: "marketCapUsd",     label: "Market Cap",           type: "number", format: "usd",  tooltip: "Live market cap in USD from CoinGecko" },
     { key: "Qlty %",           label: "Qlty %",               type: "number", format: "pct1", tooltip: "How clean the activity looks — penalizes bot-like patterns, extreme concentration, and unrealistic retention" },
-    { key: "Traders",          label: "Traders (30d)",        type: "number", format: "int",  tooltip: "Unique wallets that bought or sold on DEX in the last 30 days — DEX activity only, not all contract interactions" },
+    { key: "Traders",          label: "Traders (30d)",        type: "number", format: "int",  tooltip: "Unique wallets that bought or sold on DEX in the last 30 days" },
     { key: "Buyers 30d",       label: "Buyers (30d)",         type: "number", format: "int",  tooltip: "Unique wallets that bought in the last 30 days" },
     { key: "Buyers 7d",        label: "Buyers (7d)",          type: "number", format: "int",  tooltip: "Unique wallets that bought in the last 7 days" },
     { key: "1st Buyers 30d",   label: "1st Buyers (30d)",     type: "number", format: "int",  tooltip: "Wallets buying this token for the very first time in the last 30 days" },
@@ -139,9 +129,9 @@ const TABS = {
     { key: "1st Sellers 7d",   label: "1st Sellers (7d)",     type: "number", format: "int",  tooltip: "Wallets selling for the first time in the last 7 days" },
     { key: "Buy/Sell Ratio",   label: "Buy/Sell Ratio (7d)",  type: "number", format: "dec2", tooltip: "Buyers 7d ÷ all unique sellers this week — above 1.0 means more wallets buying than selling" },
     { key: "Token Age Days",   label: "Age (days)",           type: "number", format: "int",  tooltip: "Days since this token's contract was first deployed on Base" },
-    { key: "Non-Trade New 30d",label: "Non-Trade New (30d)",  type: "number", format: "int",  tooltip: "New wallets in the last 30 days that made no first buy or sell — likely arrived via airdrop or transfer" },
+    { key: "Non-Trade New 30d",label: "Non-Trade New (30d)",  type: "number", format: "int",  tooltip: "New wallets in the last 30 days that made no first buy or sell" },
     { key: "Top10 %",          label: "Top10 % (30d)",        type: "number", format: "pct1", tooltip: "Share of all 30-day transactions from the top 10 most active wallets — lower is healthier" },
-    { key: "Risk %",           label: "Risk %",               type: "number", format: "pct1", tooltip: "How concentrated the volume is in a few wallets — higher means more concentrated, which is higher risk" },
+    { key: "Risk %",           label: "Risk %",               type: "number", format: "pct1", tooltip: "How concentrated the volume is in a few wallets — higher means more concentrated" },
   ],
   Discover: [
     { key: "name",         label: "Project",    type: "string" },
@@ -153,32 +143,42 @@ const TABS = {
 };
 
 const TAG_FILTERS = [
-  { label: "AI Agents",    key: "agents",             match: (tag) => (tag && tag.startsWith("agent-")) || tag === "clanker-via-bankrbot-prefork" },
-  { label: "Independent",  key: "agent-independent",  match: (tag) => tag === "agent-independent" },
-  { label: "Via Virtuals", key: "agent-via-virtuals",  match: (tag) => tag === "agent-via-virtuals" },
-  { label: "Via Clanker",  key: "agent-via-clanker",  match: (tag) => tag === "agent-via-clanker" || tag === "clanker-via-bankrbot-prefork" },
-  { label: "Via Bankr",    key: "agent-via-bankr",    match: (tag) => tag === "agent-via-bankr" },
-  { label: "Non-Agents",   key: "non-agents",         match: (tag) => tag && (tag.startsWith("non-agent-") || tag === "neither") },
+  {
+    group: "Type",
+    filters: [
+      { label: "Agents",      key: "agents",      match: (tag) => (tag && tag.startsWith("agent-")) || tag === "clanker-via-bankrbot-prefork" },
+      { label: "Non-Agents",  key: "non-agents",  match: (tag) => tag && (tag.startsWith("non-agent-") || tag === "neither") },
+    ],
+  },
+  {
+    group: "Launched via",
+    filters: [
+      { label: "Virtuals",          key: "virtuals",   match: (tag) => tag === "agent-via-virtuals" || tag === "non-agent-via-virtuals" },
+      { label: "Clanker",           key: "clanker",    match: (tag) => tag === "agent-via-clanker" || tag === "non-agent-via-clanker" },
+      { label: "Bankr",             key: "bankr",      match: (tag) => tag === "agent-via-bankr" || tag === "non-agent-via-bankr" },
+      { label: "Bankr (pre-fork)",  key: "prefork",    match: (tag) => tag === "clanker-via-bankrbot-prefork" },
+      { label: "Other",             key: "other",      match: (tag) => tag === "agent-independent" || tag === "non-agent-infrastructure" || tag === "neither" },
+    ],
+  },
+  {
+    group: "Profile",
+    filters: [
+      { label: "Breakout",     key: "breakout",     match: (_, d) => d["Prof"] === "Breakout" },
+      { label: "Quick Mover",  key: "quick-mover",  match: (_, d) => d["Prof"] === "Quick Mover" },
+      { label: "Slow Burner",  key: "slow-burner",  match: (_, d) => d["Prof"] === "Slow Burner" },
+      { label: "Cold",         key: "cold",         match: (_, d) => d["Prof"] === "Cold" },
+    ],
+  },
+  {
+    group: "Signal",
+    filters: [
+      { label: "Confirmed Growth", key: "confirmed-growth", match: (_, d) => d["signal"] === "Confirmed Growth" },
+      { label: "Absorbed",         key: "absorbed",         match: (_, d) => d["signal"] === "Absorbed" },
+      { label: "Thin Rally",       key: "thin-rally",       match: (_, d) => d["signal"] === "Thin Rally" },
+      { label: "Cooling",          key: "cooling",          match: (_, d) => d["signal"] === "Cooling" },
+    ],
+  },
 ];
-
-const READ_TOOLTIPS = {
-  Beacon: "Strongest combo: real usage growing and price agrees",
-  "Quiet Beacon": "Strong fundamentals, but the market hasn't priced it in yet",
-  Undercurrent: "Strong fundamentals, volume isn't moving price — possible quiet accumulation",
-  Overshoot: "Strong fundamentals but price is up on light volume — may be ahead of itself",
-  Flare: "Hot right now, but durability is unproven — watch for fade",
-  Afterglow: "Momentum likely fading along with price",
-  Backdraft: "Fast activity but price isn't rewarding it — possible heavy selling into the move",
-  Flashpoint: "Classic pump pattern: activity up, price popping on thin volume",
-  "Low Hum": "Steady, sticky usage with price and volume finally agreeing",
-  Standby: "Stable but quiet — a sleeper with no near-term catalyst",
-  "Low Signal": "Durable usage, possibly undervalued relative to its retention strength",
-  "Soft Ping": "Modest low-risk price tick on a stable base",
-  Mirage: "Price rising despite weak fundamentals — possibly hype-driven, no substance behind it",
-  Flatline: "Weak across the board — lowest priority",
-  Bleed: "Weak fundamentals, rising volume, falling price — possible distribution",
-  "False Flare": "Weakest, highest-risk combo: price popping on thin volume with nothing behind it",
-};
 
 const READ_TIERS = {
   Beacon: "teal", "Low Hum": "teal", Undercurrent: "teal", "Quiet Beacon": "teal",
@@ -187,7 +187,7 @@ const READ_TIERS = {
 };
 
 const READ_TIER_COLORS = {
-  teal: { bg: "var(--read-teal-bg)", text: "var(--read-teal-text)" },
+  teal:  { bg: "var(--read-teal-bg)",  text: "var(--read-teal-text)" },
   amber: { bg: "var(--read-amber-bg)", text: "var(--read-amber-text)" },
   coral: { bg: "var(--read-coral-bg)", text: "var(--read-coral-text)" },
 };
@@ -209,20 +209,14 @@ function ReadBadge({ value }) {
 
 function GatedCell({ blurred, children }) {
   if (!blurred) return children;
-  return (
-    <span style={{ filter: "blur(6px)", userSelect: "none", display: "inline-block" }}>
-      {children}
-    </span>
-  );
+  return <span style={{ filter: "blur(6px)", userSelect: "none", display: "inline-block" }}>{children}</span>;
 }
 
 function GatedSection({ blurred, children }) {
   if (!blurred) return children;
   return (
     <div style={{ position: "relative" }}>
-      <div style={{ filter: "blur(8px)", pointerEvents: "none", userSelect: "none" }}>
-        {children}
-      </div>
+      <div style={{ filter: "blur(8px)", pointerEvents: "none", userSelect: "none" }}>{children}</div>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <p style={{
           fontSize: "14px", fontWeight: 600, color: "var(--text)", background: "var(--bg)",
@@ -272,14 +266,11 @@ function SummaryBar({ data }) {
   const total = arr.length;
   const breakouts = arr.filter((d) => d["Prof"] === "Breakout").length;
   const oppValues = arr.map((d) => d["Opp"]).filter((v) => v != null && !Number.isNaN(Number(v)));
-  const avgOpp = oppValues.length > 0
-    ? (oppValues.reduce((a, b) => a + Number(b), 0) / oppValues.length).toFixed(1) : "—";
+  const avgOpp = oppValues.length > 0 ? (oppValues.reduce((a, b) => a + Number(b), 0) / oppValues.length).toFixed(1) : "—";
   const momValues = arr.map((d) => d["Mom"]).filter((v) => v != null && !Number.isNaN(Number(v)));
-  const avgMom = momValues.length > 0
-    ? (momValues.reduce((a, b) => a + Number(b), 0) / momValues.length).toFixed(1) : "—";
+  const avgMom = momValues.length > 0 ? (momValues.reduce((a, b) => a + Number(b), 0) / momValues.length).toFixed(1) : "—";
   const susValues = arr.map((d) => d["Sus"]).filter((v) => v != null && !Number.isNaN(Number(v)));
-  const avgSus = susValues.length > 0
-    ? (susValues.reduce((a, b) => a + Number(b), 0) / susValues.length).toFixed(1) : "—";
+  const avgSus = susValues.length > 0 ? (susValues.reduce((a, b) => a + Number(b), 0) / susValues.length).toFixed(1) : "—";
   const withPrice = arr.filter((d) => d["priceUsd"] != null).length;
 
   const pill = (label, value) => (
@@ -307,44 +298,42 @@ function SummaryBar({ data }) {
 
 function FilterBar({ activeFilters, onToggle, onClear }) {
   return (
-    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px", alignItems: "center" }}>
-      {TAG_FILTERS.map((f) => {
-        const isActive = activeFilters.has(f.key);
-        return (
-          <button
-            key={f.key}
-            onClick={() => onToggle(f.key)}
-            style={{
-              padding: "4px 12px",
-              borderRadius: "6px",
-              border: isActive ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
-              background: isActive ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
-              color: isActive ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
-              cursor: "pointer",
-              fontSize: "12px",
-              fontWeight: isActive ? 600 : 400,
-              transition: "background 0.15s, color 0.15s",
-            }}
-          >
-            {f.label}
-          </button>
-        );
-      })}
+    <div style={{ marginBottom: "12px" }}>
+      {TAG_FILTERS.map((group) => (
+        <div key={group.group} style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap", marginBottom: "6px" }}>
+          <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.04em", minWidth: "80px", flexShrink: 0 }}>
+            {group.group}
+          </span>
+          {group.filters.map((f) => {
+            const isActive = activeFilters.has(f.key);
+            return (
+              <button
+                key={f.key}
+                onClick={() => onToggle(f.key)}
+                style={{
+                  padding: "3px 10px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
+                  border: isActive ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
+                  background: isActive ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
+                  color: isActive ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
+                  fontWeight: isActive ? 600 : 400,
+                  transition: "background 0.15s, color 0.15s",
+                }}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+      ))}
       {activeFilters.size > 0 && (
         <button
           onClick={onClear}
           style={{
-            padding: "4px 10px",
-            borderRadius: "6px",
-            border: "1px solid var(--border)",
-            background: "none",
-            color: "var(--text-faint)",
-            cursor: "pointer",
-            fontSize: "11px",
-            transition: "color 0.15s",
+            padding: "3px 10px", borderRadius: "6px", border: "1px solid var(--border)",
+            background: "none", color: "var(--text-faint)", cursor: "pointer", fontSize: "11px", marginTop: "2px",
           }}
         >
-          Clear
+          Clear all
         </button>
       )}
     </div>
@@ -353,8 +342,7 @@ function FilterBar({ activeFilters, onToggle, onClear }) {
 
 const PROF_GRID_DATA = [
   {
-    prof: "Breakout",
-    subtitle: "strong momentum + strong sustainability",
+    prof: "Breakout", subtitle: "strong momentum + strong sustainability",
     signals: [
       { signal: "Confirmed Growth", read: "Beacon",      desc: "Strongest combo: real usage growing, price agrees." },
       { signal: "Absorbed",         read: "Undercurrent",desc: "Volume isn't moving price yet — possible quiet accumulation." },
@@ -363,8 +351,7 @@ const PROF_GRID_DATA = [
     ],
   },
   {
-    prof: "Quick Mover",
-    subtitle: "strong momentum, weak sustainability",
+    prof: "Quick Mover", subtitle: "strong momentum, weak sustainability",
     signals: [
       { signal: "Confirmed Growth", read: "Flare",      desc: "Hot right now, but durability is unproven." },
       { signal: "Absorbed",         read: "Backdraft",  desc: "Fast activity, price not rewarding it." },
@@ -373,8 +360,7 @@ const PROF_GRID_DATA = [
     ],
   },
   {
-    prof: "Slow Burner",
-    subtitle: "weak momentum, strong sustainability",
+    prof: "Slow Burner", subtitle: "weak momentum, strong sustainability",
     signals: [
       { signal: "Confirmed Growth", read: "Low Hum",    desc: "Steady, sticky usage with price finally agreeing." },
       { signal: "Absorbed",         read: "Low Signal", desc: "Durable usage, possibly undervalued." },
@@ -383,8 +369,7 @@ const PROF_GRID_DATA = [
     ],
   },
   {
-    prof: "Cold",
-    subtitle: "weak momentum + weak sustainability",
+    prof: "Cold", subtitle: "weak momentum + weak sustainability",
     signals: [
       { signal: "Confirmed Growth", read: "Mirage",      desc: "Price rising despite weak fundamentals — hype-driven." },
       { signal: "Absorbed",         read: "Bleed",       desc: "Weak fundamentals, falling price — possible distribution." },
@@ -412,14 +397,10 @@ function ProfSignalKey() {
             </div>
             {col.signals.map((row) => (
               <div key={row.signal} style={{ padding: "8px 12px", borderTop: "1px solid var(--border)" }}>
-                <div style={{ fontSize: "11px", color: "var(--text-faint)", marginBottom: "4px", fontWeight: 500 }}>
-                  {row.signal}
-                </div>
+                <div style={{ fontSize: "11px", color: "var(--text-faint)", marginBottom: "4px", fontWeight: 500 }}>{row.signal}</div>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "6px", flexWrap: "wrap" }}>
                   <ReadBadge value={row.read} />
-                  <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4", paddingTop: "2px" }}>
-                    {row.desc}
-                  </span>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: "1.4", paddingTop: "2px" }}>{row.desc}</span>
                 </div>
               </div>
             ))}
@@ -438,6 +419,9 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const [pinnedKeys, setPinnedKeys] = useState([]);
   const [dragOver, setDragOver] = useState(null);
   const [activeFilters, setActiveFilters] = useState(new Set());
+  const [watchedAddresses, setWatchedAddresses] = useState([]);
+  const [watchlistColumnConfig, setWatchlistColumnConfig] = useState(null);
+  const [watchlistLoaded, setWatchlistLoaded] = useState(false);
   const dragKeyRef = useRef(null);
   const { tooltip, show: showTooltip, move: moveTooltip, hide: hideTooltip } = useDelayedTooltip();
 
@@ -454,11 +438,73 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   });
   const hasAccess = !!hasAccessRaw;
 
+  // ── Load watchlist from Upstash when wallet connects ─────────────────────
+  useEffect(() => {
+    if (!address) {
+      setWatchedAddresses([]);
+      setWatchlistColumnConfig(null);
+      setWatchlistLoaded(false);
+      return;
+    }
+    let cancelled = false;
+    async function loadWatchlist() {
+      try {
+        const res = await fetch(`/api/watchlist?wallet=${address.toLowerCase()}`);
+        const json = await res.json();
+        if (cancelled) return;
+        setWatchedAddresses(json.watchlist || []);
+        setWatchlistColumnConfig(json.columns ? { keys: json.columns, order: json.columnOrder } : null);
+        setWatchlistLoaded(true);
+      } catch {
+        if (!cancelled) setWatchlistLoaded(true);
+      }
+    }
+    loadWatchlist();
+    return () => { cancelled = true; };
+  }, [address]);
+
+  // ── Persist watchlist to Upstash ─────────────────────────────────────────
+  async function persistWatchlist(newAddresses, newColumnConfig) {
+    if (!address) return;
+    try {
+      await fetch("/api/watchlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wallet: address.toLowerCase(),
+          watchlist: newAddresses,
+          columns: newColumnConfig?.keys || null,
+          columnOrder: newColumnConfig?.order || null,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to persist watchlist:", err);
+    }
+  }
+
+  function toggleWatch(tokenAddress) {
+    if (!tokenAddress) return;
+    const addrLower = tokenAddress.toLowerCase();
+    setWatchedAddresses((prev) => {
+      const next = prev.includes(addrLower)
+        ? prev.filter((a) => a !== addrLower)
+        : [...prev, addrLower];
+      persistWatchlist(next, watchlistColumnConfig);
+      return next;
+    });
+  }
+
+  function handleColumnConfigChange(config) {
+    setWatchlistColumnConfig(config);
+    persistWatchlist(watchedAddresses, config);
+  }
+
   const isTripwire = activeTab === "The Wire";
   const isAbout = activeTab === "About";
   const isClawd = activeTab === "CLAWD";
   const isDiscover = activeTab === "Discover";
-  const isSpecialTab = isTripwire || isAbout || isClawd;
+  const isWatchlist = activeTab === "Watchlist";
+  const isSpecialTab = isTripwire || isAbout || isClawd || isWatchlist;
   const columns = isSpecialTab ? [] : TABS[activeTab];
   const rawSource = isDiscover ? discoveryData : data;
   const sourceData = isSpecialTab ? [] : Array.isArray(rawSource) ? rawSource : [];
@@ -503,18 +549,13 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   function handleFilterToggle(key) {
     setActiveFilters((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }
 
-  function handleFilterClear() {
-    setActiveFilters(new Set());
-  }
+  function handleFilterClear() { setActiveFilters(new Set()); }
 
   function handleDragStart(key) { dragKeyRef.current = key; }
   function handleDragEnter(key) { setDragOver(key); }
@@ -542,9 +583,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     if (val == null || val === "" || Number.isNaN(Number(val))) return null;
     const lowerBetter = new Set(["Risk %", "Top10 %"]);
     const asc = lowerBetter.has(colKey);
-    const all = dataArr
-      .map((d) => Number(d[colKey]))
-      .filter((v) => !Number.isNaN(v) && v != null);
+    const all = dataArr.map((d) => Number(d[colKey])).filter((v) => !Number.isNaN(v) && v != null);
     if (all.length === 0) return null;
     const sorted = [...all].sort((a, b) => asc ? a - b : b - a);
     const rank = sorted.indexOf(Number(val)) + 1;
@@ -553,7 +592,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
 
   function handleTabChange(tab) {
     setActiveTab(tab);
-    if (tab === "The Wire" || tab === "About" || tab === "CLAWD") return;
+    if (tab === "The Wire" || tab === "About" || tab === "CLAWD" || tab === "Watchlist") return;
     const firstNumeric = TABS[tab]?.find((c) => c.type === "number");
     setSortKey(firstNumeric ? firstNumeric.key : TABS[tab]?.[0]?.key);
     setSortDir("desc");
@@ -575,24 +614,25 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   }, [activeTab]);
 
   function handleSort(key) {
-    if (sortKey === key) {
-      setSortDir(sortDir === "desc" ? "asc" : "desc");
-    } else {
-      setSortKey(key);
-      setSortDir("desc");
-    }
+    if (sortKey === key) setSortDir(sortDir === "desc" ? "asc" : "desc");
+    else { setSortKey(key); setSortDir("desc"); }
   }
 
-  // Empty set = show all. Multiple active = OR logic (token matches any selected filter)
+  // ── Filter logic: AND between groups, OR within group ────────────────────
+  const allFilterDefs = TAG_FILTERS.flatMap((g) => g.filters);
+
   const filtered = isSpecialTab || isDiscover
     ? sourceData
     : activeFilters.size === 0
       ? sourceData
-      : sourceData.filter((d) =>
-          TAG_FILTERS
-            .filter((f) => activeFilters.has(f.key))
-            .some((f) => f.match(d["Tag"]))
-        );
+      : sourceData.filter((d) => {
+          const activeGroups = TAG_FILTERS.filter((g) =>
+            g.filters.some((f) => activeFilters.has(f.key))
+          );
+          return activeGroups.every((g) =>
+            g.filters.filter((f) => activeFilters.has(f.key)).some((f) => f.match(d["Tag"], d))
+          );
+        });
 
   const sorted = isSpecialTab
     ? []
@@ -600,19 +640,19 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         const col = columns.find((c) => c.key === sortKey) || columns[0];
         let aVal = a[sortKey];
         let bVal = b[sortKey];
-        if (col.type === "number") {
+        if (col?.type === "number") {
           aVal = aVal == null || aVal === "" ? -Infinity : Number(aVal);
           bVal = bVal == null || bVal === "" ? -Infinity : Number(bVal);
           return sortDir === "desc" ? bVal - aVal : aVal - bVal;
-        } else {
-          aVal = aVal == null ? "" : String(aVal);
-          bVal = bVal == null ? "" : String(bVal);
-          return sortDir === "desc" ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
         }
+        aVal = aVal == null ? "" : String(aVal);
+        bVal = bVal == null ? "" : String(bVal);
+        return sortDir === "desc" ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
       });
 
   function tabLabel(tab) {
     if (tab === "Discover") return `Discover${discoveryData.length > 0 ? ` (${discoveryData.length})` : ""}`;
+    if (tab === "Watchlist") return `Watchlist${watchedAddresses.length > 0 ? ` (${watchedAddresses.length})` : ""}`;
     return tab;
   }
 
@@ -630,6 +670,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     const isRowGated  = !isDiscover && !isPinned && unpinnedIdx >= FREE_ROW_COUNT && !hasAccess;
     const isClawdRow  = !isDiscover && d["Project"] === "CLAWD";
     const isDragTarget = dragOver === d[rowKeyField] && isPinned;
+    const isWatched   = !isDiscover && watchedAddresses.includes((d["Address"] || "").toLowerCase());
 
     return (
       <tr
@@ -647,20 +688,36 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
         }}
       >
         {!isDiscover && (
-          <td style={{ padding: "4px 8px", whiteSpace: "nowrap", width: "28px" }}>
+          <td style={{ padding: "4px 4px", whiteSpace: "nowrap", width: "52px" }}>
+            <button
+              onClick={() => toggleWatch(d["Address"])}
+              title={isWatched ? "Remove from watchlist" : "Add to watchlist"}
+              style={{
+                background: "none", border: "none", cursor: "pointer", fontSize: "14px",
+                lineHeight: 1, padding: "0 2px",
+                color: isWatched ? "#f5c518" : "var(--text-faint)",
+                opacity: isWatched ? 1 : 0.5,
+                transition: "opacity 0.15s, color 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = isWatched ? "1" : "0.5"; }}
+            >
+              ⭐
+            </button>
             <button
               onClick={() => togglePin(d[rowKeyField])}
               title={isPinned ? "Unpin" : "Pin to top"}
               style={{
-                background: "none", border: "none", cursor: "pointer", fontSize: "16px",
-                lineHeight: 1, color: isPinned ? "var(--btn-active-bg)" : "var(--text-faint)",
-                padding: "0 2px", opacity: isPinned ? 1 : 0.65,
+                background: "none", border: "none", cursor: "pointer", fontSize: "14px",
+                lineHeight: 1, padding: "0 2px",
+                color: isPinned ? "var(--btn-active-bg)" : "var(--text-faint)",
+                opacity: isPinned ? 1 : 0.5,
                 transition: "opacity 0.15s, color 0.15s",
               }}
               onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "var(--btn-active-bg)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = isPinned ? "1" : "0.65"; e.currentTarget.style.color = isPinned ? "var(--btn-active-bg)" : "var(--text-faint)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = isPinned ? "1" : "0.5"; e.currentTarget.style.color = isPinned ? "var(--btn-active-bg)" : "var(--text-faint)"; }}
             >
-              {isPinned ? "📌" : "📍"}
+              📍
             </button>
           </td>
         )}
@@ -675,9 +732,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
               <div style={{ fontWeight: 700, fontSize: "15px", marginBottom: "4px" }}>
                 {rankInfo.rank} <span style={{ color: "var(--text-faint)", fontWeight: 400 }}>/ {rankInfo.total}</span>
               </div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                Rank for <strong>{col.label}</strong>
-              </div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Rank for <strong>{col.label}</strong></div>
               <div style={{ fontSize: "11px", color: "var(--text-faint)", marginTop: "4px", borderTop: "1px solid var(--border)", paddingTop: "4px" }}>
                 1 = best · {rankInfo.total} = worst
               </div>
@@ -691,9 +746,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
               onMouseMove={rankTooltipContent ? moveTooltip : undefined}
               onMouseLeave={rankTooltipContent ? hideTooltip : undefined}
             >
-              <GatedCell blurred={isRowGated}>
-                {cellContent}
-              </GatedCell>
+              <GatedCell blurred={isRowGated}>{cellContent}</GatedCell>
             </td>
           );
         })}
@@ -706,7 +759,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       <table style={{ borderCollapse: "collapse", marginTop: "8px", width: "100%" }}>
         <thead>
           <tr>
-            {!isDiscover && <th style={{ width: "28px", borderBottom: "1px solid var(--border-strong)", padding: "6px 8px" }} />}
+            {!isDiscover && <th style={{ width: "52px", borderBottom: "1px solid var(--border-strong)", padding: "6px 8px" }} />}
             {columns.map((col) => (
               <th
                 key={col.key}
@@ -747,7 +800,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     </div>
   );
 
-  const allTabsToRender = [...Object.keys(TABS), "CLAWD", "The Wire", "About"];
+  const allTabsToRender = [...Object.keys(TABS), "Watchlist", "CLAWD", "The Wire", "About"];
 
   return (
     <div>
@@ -772,16 +825,12 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       </div>
 
       <p style={{ fontSize: "12px", color: "var(--text-xfaint)", marginBottom: "12px" }}>
-        Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs. Hover a column header 1–2s for its definition. Hover any number 3s to see its rank. Click 📍 to pin a row to the top.
+        Tip: press <strong>[</strong> or <strong>]</strong> to switch tabs. Hover a column header 1–2s for its definition. Hover any number 3s to see its rank. Click ⭐ to watch, 📍 to pin to top.
       </p>
 
       {!isSpecialTab && !isDiscover && (
         <>
-          <FilterBar
-            activeFilters={activeFilters}
-            onToggle={handleFilterToggle}
-            onClear={handleFilterClear}
-          />
+          <FilterBar activeFilters={activeFilters} onToggle={handleFilterToggle} onClear={handleFilterClear} />
           <SummaryBar data={filtered} />
         </>
       )}
@@ -810,6 +859,18 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
               marketCapRank={marketCapRank}
               walletsRank={walletsRank}
               ranks={ranks}
+            />
+          </GatedSection>
+        )}
+        {isWatchlist && (
+          <GatedSection blurred={!hasAccess}>
+            <WatchlistPanel
+              data={dataArr}
+              watchedAddresses={watchedAddresses}
+              onUnwatch={toggleWatch}
+              address={address}
+              columnConfig={watchlistColumnConfig}
+              onColumnConfigChange={handleColumnConfigChange}
             />
           </GatedSection>
         )}
