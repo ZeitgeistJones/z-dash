@@ -10,23 +10,10 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning style={{ background: "#1c1b22" }}>
       <head>
         <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  document.documentElement.setAttribute('data-theme', 'dark');
-                  document.documentElement.style.backgroundColor = '#1c1b22';
-                  window.addEventListener('pageshow', function(e) {
-                    if (e.persisted) {
-                      document.documentElement.setAttribute('data-theme', 'dark');
-                      document.documentElement.style.backgroundColor = '#1c1b22';
-                    }
-                  });
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
+  dangerouslySetInnerHTML={{
+    __html: `document.documentElement.setAttribute('data-theme', 'dark');`,
+  }}
+/>
         <style
           dangerouslySetInnerHTML={{
             __html: `
