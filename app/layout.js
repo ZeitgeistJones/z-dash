@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning style={{ background: "#1c1b22" }}>
+    <html lang="en" data-theme="dark" suppressHydrationWarning style={{ background: "#1c1b22" }}>
       <head>
         <script
   dangerouslySetInnerHTML={{
