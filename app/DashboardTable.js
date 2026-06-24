@@ -153,13 +153,12 @@ const TABS = {
 };
 
 const TAG_FILTERS = [
-  { label: "All",         key: "all",               match: () => true },
-  { label: "AI Agents",   key: "agents",             match: (tag) => (tag && tag.startsWith("agent-")) || tag === "clanker-via-bankrbot-prefork" },
-  { label: "Independent", key: "agent-independent",  match: (tag) => tag === "agent-independent" },
-  { label: "Via Virtuals",key: "agent-via-virtuals", match: (tag) => tag === "agent-via-virtuals" },
-  { label: "Via Clanker", key: "agent-via-clanker",  match: (tag) => tag === "agent-via-clanker" || tag === "clanker-via-bankrbot-prefork" },
-  { label: "Via Bankr",   key: "agent-via-bankr",    match: (tag) => tag === "agent-via-bankr" },
-  { label: "Non-Agents",  key: "non-agents",         match: (tag) => tag && (tag.startsWith("non-agent-") || tag === "neither") },
+  { label: "AI Agents",    key: "agents",             match: (tag) => (tag && tag.startsWith("agent-")) || tag === "clanker-via-bankrbot-prefork" },
+  { label: "Independent",  key: "agent-independent",  match: (tag) => tag === "agent-independent" },
+  { label: "Via Virtuals", key: "agent-via-virtuals",  match: (tag) => tag === "agent-via-virtuals" },
+  { label: "Via Clanker",  key: "agent-via-clanker",  match: (tag) => tag === "agent-via-clanker" || tag === "clanker-via-bankrbot-prefork" },
+  { label: "Via Bankr",    key: "agent-via-bankr",    match: (tag) => tag === "agent-via-bankr" },
+  { label: "Non-Agents",   key: "non-agents",         match: (tag) => tag && (tag.startsWith("non-agent-") || tag === "neither") },
 ];
 
 const READ_TOOLTIPS = {
@@ -306,15 +305,15 @@ function SummaryBar({ data }) {
   );
 }
 
-function FilterBar({ activeFilter, onFilter }) {
+function FilterBar({ activeFilters, onToggle, onClear }) {
   return (
-    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px", alignItems: "center" }}>
       {TAG_FILTERS.map((f) => {
-        const isActive = activeFilter === f.key;
+        const isActive = activeFilters.has(f.key);
         return (
           <button
             key={f.key}
-            onClick={() => onFilter(f.key)}
+            onClick={() => onToggle(f.key)}
             style={{
               padding: "4px 12px",
               borderRadius: "6px",
@@ -331,6 +330,23 @@ function FilterBar({ activeFilter, onFilter }) {
           </button>
         );
       })}
+      {activeFilters.size > 0 && (
+        <button
+          onClick={onClear}
+          style={{
+            padding: "4px 10px",
+            borderRadius: "6px",
+            border: "1px solid var(--border)",
+            background: "none",
+            color: "var(--text-faint)",
+            cursor: "pointer",
+            fontSize: "11px",
+            transition: "color 0.15s",
+          }}
+        >
+          Clear
+        </button>
+      )}
     </div>
   );
 }
@@ -421,7 +437,7 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
   const [sortDir, setSortDir] = useState("desc");
   const [pinnedKeys, setPinnedKeys] = useState([]);
   const [dragOver, setDragOver] = useState(null);
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeFilters, setActiveFilters] = useState(new Set());
   const dragKeyRef = useRef(null);
   const { tooltip, show: showTooltip, move: moveTooltip, hide: hideTooltip } = useDelayedTooltip();
 
@@ -482,6 +498,22 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
       savePins(next);
       return next;
     });
+  }
+
+  function handleFilterToggle(key) {
+    setActiveFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
+
+  function handleFilterClear() {
+    setActiveFilters(new Set());
   }
 
   function handleDragStart(key) { dragKeyRef.current = key; }
@@ -551,11 +583,16 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
     }
   }
 
-  const activeFilterDef = TAG_FILTERS.find((f) => f.key === activeFilter) || TAG_FILTERS[0];
-
+  // Empty set = show all. Multiple active = OR logic (token matches any selected filter)
   const filtered = isSpecialTab || isDiscover
     ? sourceData
-    : sourceData.filter((d) => activeFilterDef.match(d["Tag"]));
+    : activeFilters.size === 0
+      ? sourceData
+      : sourceData.filter((d) =>
+          TAG_FILTERS
+            .filter((f) => activeFilters.has(f.key))
+            .some((f) => f.match(d["Tag"]))
+        );
 
   const sorted = isSpecialTab
     ? []
@@ -740,7 +777,11 @@ export default function DashboardTable({ data, discoveryData = [], lastUpdated }
 
       {!isSpecialTab && !isDiscover && (
         <>
-          <FilterBar activeFilter={activeFilter} onFilter={setActiveFilter} />
+          <FilterBar
+            activeFilters={activeFilters}
+            onToggle={handleFilterToggle}
+            onClear={handleFilterClear}
+          />
           <SummaryBar data={filtered} />
         </>
       )}
