@@ -152,6 +152,143 @@ const TABS = {
   ],
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. ADD this constant near the top of DashboardTable.js, after the TABS object
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TAG_FILTERS = [
+  {
+    label: "All",
+    key: "all",
+    match: () => true,
+  },
+  {
+    label: "AI Agents",
+    key: "agents",
+    match: (tag) => tag && tag.startsWith("agent-") || tag === "clanker-via-bankrbot-prefork",
+  },
+  {
+    label: "Independent",
+    key: "agent-independent",
+    match: (tag) => tag === "agent-independent",
+  },
+  {
+    label: "Via Virtuals",
+    key: "agent-via-virtuals",
+    match: (tag) => tag === "agent-via-virtuals",
+  },
+  {
+    label: "Via Clanker",
+    key: "agent-via-clanker",
+    match: (tag) => tag === "agent-via-clanker" || tag === "clanker-via-bankrbot-prefork",
+  },
+  {
+    label: "Via Bankr",
+    key: "agent-via-bankr",
+    match: (tag) => tag === "agent-via-bankr",
+  },
+  {
+    label: "Non-Agents",
+    key: "non-agents",
+    match: (tag) => tag && (tag.startsWith("non-agent-") || tag === "neither"),
+  },
+];
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. ADD this state inside the DashboardTable component, near the other useState calls
+// ─────────────────────────────────────────────────────────────────────────────
+
+const [activeFilter, setActiveFilter] = useState("all");
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. ADD this FilterBar component — paste it outside DashboardTable, near the
+//    other small components like SummaryBar
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FilterBar({ activeFilter, onFilter }) {
+  return (
+    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+      {TAG_FILTERS.map((f) => {
+        const isActive = activeFilter === f.key;
+        return (
+          <button
+            key={f.key}
+            onClick={() => onFilter(f.key)}
+            style={{
+              padding: "4px 12px",
+              borderRadius: "6px",
+              border: isActive ? "1px solid var(--btn-active-bg)" : "1px solid var(--btn-inactive-border)",
+              background: isActive ? "var(--btn-active-bg)" : "var(--btn-inactive-bg)",
+              color: isActive ? "var(--btn-active-text)" : "var(--btn-inactive-text)",
+              cursor: "pointer",
+              fontSize: "12px",
+              fontWeight: isActive ? 600 : 400,
+              transition: "background 0.15s, color 0.15s",
+            }}
+          >
+            {f.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. REPLACE the existing `const sorted = ...` block with this version
+//    that applies the filter before sorting
+// ─────────────────────────────────────────────────────────────────────────────
+
+const activeFilterDef = TAG_FILTERS.find((f) => f.key === activeFilter) || TAG_FILTERS[0];
+
+const filtered = isSpecialTab || isDiscover
+  ? sourceData
+  : sourceData.filter((d) => activeFilterDef.match(d["Tag"]));
+
+const sorted = isSpecialTab
+  ? []
+  : [...filtered].sort((a, b) => {
+      const col = columns.find((c) => c.key === sortKey) || columns[0];
+      let aVal = a[sortKey];
+      let bVal = b[sortKey];
+      if (col.type === "number") {
+        aVal = aVal == null || aVal === "" ? -Infinity : Number(aVal);
+        bVal = bVal == null || bVal === "" ? -Infinity : Number(bVal);
+        return sortDir === "desc" ? bVal - aVal : aVal - bVal;
+      } else {
+        aVal = aVal == null ? "" : String(aVal);
+        bVal = bVal == null ? "" : String(bVal);
+        return sortDir === "desc" ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+      }
+    });
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. ADD the FilterBar to the JSX, just before the SummaryBar
+//    Find this block in the return():
+//
+//    {!isSpecialTab && !isDiscover && <SummaryBar data={dataArr} />}
+//
+//    Replace it with:
+// ─────────────────────────────────────────────────────────────────────────────
+
+{!isSpecialTab && !isDiscover && (
+  <>
+    <FilterBar activeFilter={activeFilter} onFilter={setActiveFilter} />
+    <SummaryBar data={filtered} />
+  </>
+)}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTE: passing `filtered` to SummaryBar instead of `dataArr` means the
+// summary pills (Projects tracked, Breakout count, Avg scores) update
+// to reflect the current filter — so "Projects tracked 74" when you're
+// on AI Agents, not always 178.
+// ─────────────────────────────────────────────────────────────────────────────
 const READ_TOOLTIPS = {
   Beacon: "Strongest combo: real usage growing and price agrees",
   "Quiet Beacon": "Strong fundamentals, but the market hasn't priced it in yet",
